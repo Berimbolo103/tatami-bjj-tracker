@@ -1,0 +1,36 @@
+{
+  "name": "TATAMI — BJJ Progress Tracker",
+  "short_name": "TATAMI",
+  "description": "Track your BJJ training sessions, techniques, and submission analytics.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d0d0d",
+  "theme_color": "#e63946",
+  "categories": ["sports", "fitness", "health"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Log Session",
+      "short_name": "Log",
+      "description": "Quickly log a new training session",
+      "url": "/?view=log",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

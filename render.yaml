@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: tatami-bjj-tracker
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ADMIN_TOKEN
+        generateValue: true   # Render auto-generates a secret value
+      - key: DB_DIR
+        value: /data
+    disk:
+      name: tatami-data
+      mountPath: /data
+      sizeGB: 1

@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TATAMI">
+<meta name="theme-color" content="#0d0d0d">
+<meta name="description" content="Track your BJJ training sessions, techniques, and submission analytics.">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Apple Touch Icon -->
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<!-- Open Graph (for sharing) -->
+<meta property="og:title" content="TATAMI — BJJ Progress Tracker">
+<meta property="og:description" content="Track your BJJ training sessions, techniques, and submission analytics.">
+<meta property="og:type" content="website">
+
+<title>TATAMI — BJJ Progress Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --red:#e63946;--red-dim:#c1121f;--red-glow:rgba(230,57,70,0.14);
+  --bg:#0d0d0d;--bg2:#141414;--bg3:#1c1c1c;--bg4:#242424;
+  --border:#2a2a2a;--border2:#333;
+  --text:#f0ece4;--text2:#a89f94;--text3:#5c5650;
+  --gold:#c9a84c;--gold-dim:rgba(201,168,76,0.13);
+  --blue:#457b9d;--green:#2d6a4f;--green-bright:#52b788;
+  --pending:#e8a020;--pending-dim:rgba(232,160,32,0.13);
+  --radius:10px;--radius-sm:6px;--nav-h:62px;
+  --font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;background:var(--bg);color:var(--text);font-family:var(--font-b)}
+body{min-height:100dvh;overflow-x:hidden}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;min-height:100dvh}
+.view{display:none;flex:1;overflow-y:auto;padding:1rem 1rem calc(var(--nav-h) + 1.25rem)}
+.view.active{display:block}
+
+/* ── NAV ── */
+nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(20,20,20,0.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:8.5px;font-family:var(--font-b);font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;position:relative}
+.nav-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;transition:stroke .2s}
+.nav-btn.active{color:var(--red)}.nav-btn.active svg{stroke:var(--red)}
+.nav-badge{position:absolute;top:6px;right:calc(50% - 14px);min-width:16px;height:16px;background:var(--pending);color:#000;font-size:9px;font-family:var(--font-m);font-weight:600;border-radius:8px;display:none;align-items:center;justify-content:center;padding:0 3px}
+.nav-badge.show{display:flex}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.25rem;padding-top:.5rem}
+.page-title{font-family:var(--font-d);font-size:2.2rem;letter-spacing:.03em;line-height:1}
+.page-sub{font-size:.72rem;color:var(--text3);font-family:var(--font-m);letter-spacing:.05em}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem}
+.card-label{font-size:.65rem;font-family:var(--font-m);letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.4rem}
+.card-val{font-family:var(--font-d);font-size:2.4rem;line-height:1;letter-spacing:.02em}
+.card-val.red{color:var(--red)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem}
+
+/* ── STAT ROW ── */
+.stat-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.stat-row:last-child{border-bottom:none}
+.stat-name{font-size:.85rem;color:var(--text2)}
+.stat-val{font-family:var(--font-m);font-size:.9rem;color:var(--text);font-weight:600}
+
+/* ── TAGS ── */
+.tag{display:inline-flex;align-items:center;gap:.3rem;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:.2rem .6rem;font-size:.75rem;font-family:var(--font-m);color:var(--text2);margin:.2rem}
+.tag.red{background:var(--red-glow);border-color:var(--red);color:var(--red)}
+.tag.gold{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
+.tag.green{background:rgba(45,106,79,.2);border-color:var(--green-bright);color:var(--green-bright)}
+.tag.pending{background:var(--pending-dim);border-color:var(--pending);color:var(--pending)}
+.tag .remove{cursor:pointer;opacity:.6;margin-left:.1rem}.tag .remove:hover{opacity:1}
+
+/* ── PROGRESS BAR ── */
+.pbar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin:.3rem 0}
+.pbar-fill{height:100%;border-radius:3px;background:var(--red);transition:width .4s ease}
+
+/* ── FORMS ── */
+label{display:block;font-size:.7rem;font-family:var(--font-m);color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:.35rem}
+input,textarea,select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-b);font-size:.9rem;padding:.6rem .8rem;outline:none;transition:border-color .2s;-webkit-appearance:none}
+input:focus,textarea:focus,select:focus{border-color:var(--red)}
+textarea{resize:vertical;min-height:76px}
+select option{background:var(--bg2)}
+.form-group{margin-bottom:1rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.65rem 1.2rem;border-radius:var(--radius-sm);font-family:var(--font-b);font-size:.9rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;letter-spacing:.01em}
+.btn-primary{background:var(--red);color:#fff}.btn-primary:hover{background:var(--red-dim)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}.btn-ghost:hover{border-color:var(--red);color:var(--red)}
+.btn-yellow{background:var(--pending-dim);color:var(--pending);border:1px solid var(--pending)}.btn-yellow:hover{background:var(--pending);color:#000}
+.btn-sm{padding:.4rem .8rem;font-size:.8rem}
+.btn-full{width:100%}
+
+/* ── TECHNIQUE INPUT ── */
+#tech-input-wrap{position:relative}
+#tech-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);z-index:50;max-height:200px;overflow-y:auto;display:none}
+.tech-suggestion{padding:.5rem .8rem;cursor:pointer;font-size:.85rem;display:flex;justify-content:space-between;align-items:center}
+.tech-suggestion:hover{background:var(--bg4)}
+.tech-suggestion .cat{font-size:.7rem;color:var(--text3);font-family:var(--font-m)}
+#tech-tags{display:flex;flex-wrap:wrap;gap:.2rem;min-height:28px;padding:.4rem 0}
+
+/* ── SUBMISSION ROWS ── */
+.sub-row{display:flex;gap:.5rem;align-items:center;margin:.3rem 0}
+.sub-row span{flex:1;font-size:.85rem;color:var(--text2)}
+.toggle-btn{width:82px;flex-shrink:0;padding:.45rem .3rem;font-size:.72rem;text-align:center;border-radius:var(--radius-sm);cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);font-family:var(--font-m)}
+.toggle-btn.success{background:rgba(45,106,79,.3);border-color:var(--green-bright);color:var(--green-bright)}
+.del-sub{background:none;border:none;color:var(--text3);cursor:pointer;font-size:1rem;padding:.3rem}.del-sub:hover{color:var(--red)}
+
+/* ── SESSION CARDS ── */
+.session-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem;cursor:pointer;transition:border-color .2s}
+.session-card:hover{border-color:var(--border2)}.session-card.expanded{border-color:var(--red)}
+.session-date{font-family:var(--font-m);font-size:.72rem;color:var(--text3)}
+.session-title{font-family:var(--font-d);font-size:1.35rem;letter-spacing:.02em;margin:.2rem 0 .5rem}
+.session-meta{display:flex;gap:.75rem;font-size:.78rem;color:var(--text2)}
+.session-detail{display:none;margin-top:.75rem;padding-top:.75rem;border-top:1px solid var(--border)}
+.session-card.expanded .session-detail{display:block}
+
+/* ── LIBRARY ── */
+.lib-filter{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.lib-filter-btn{padding:.3rem .7rem;border-radius:99px;font-size:.75rem;font-family:var(--font-m);cursor:pointer;background:var(--bg3);border:1px solid var(--border2);color:var(--text3);transition:all .2s}
+.lib-filter-btn.active{background:var(--red-glow);border-color:var(--red);color:var(--red)}
+.tech-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem;margin-bottom:.5rem}
+.tech-name{font-weight:600;font-size:.9rem;margin-bottom:.2rem}
+.tech-meta{font-size:.72rem;color:var(--text3);font-family:var(--font-m);display:flex;gap:.75rem;flex-wrap:wrap}
+.tech-level{font-size:.63rem;font-family:var(--font-m);padding:.15rem .4rem;border-radius:3px;letter-spacing:.06em;font-weight:600}
+.tech-level.exploring{background:rgba(92,86,80,.3);color:var(--text3)}
+.tech-level.developing{background:rgba(69,123,157,.2);color:var(--blue)}
+.tech-level.comfortable{background:var(--gold-dim);color:var(--gold)}
+.tech-level.your-game{background:var(--red-glow);color:var(--red);border:1px solid rgba(230,57,70,.3)}
+.tech-level.pending-badge{background:var(--pending-dim);color:var(--pending);border:1px solid rgba(232,160,32,.3)}
+.tech-level.rejected-badge{background:rgba(230,57,70,.08);color:#e63946;border:1px solid rgba(230,57,70,.2)}
+
+/* ── SUBMISSION STATS ── */
+.sub-bar-wrap{margin:.5rem 0}
+.sub-bar-name{font-size:.8rem;color:var(--text2);margin-bottom:.2rem;display:flex;justify-content:space-between}
+.sub-bar-name span{font-family:var(--font-m);font-size:.75rem;color:var(--text3)}
+.sub-bar-track{height:10px;background:var(--bg4);border-radius:5px;overflow:hidden;position:relative}
+.sub-bar-att{height:100%;border-radius:5px;background:var(--blue);opacity:.4;position:absolute;top:0;left:0}
+.sub-bar-suc{height:100%;border-radius:5px;background:var(--green-bright)}
+
+/* ── STYLE / PROFILE ── */
+.style-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:var(--radius);padding:1.25rem;margin-bottom:1rem;position:relative;overflow:hidden}
+.style-card::before{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:var(--red-glow);filter:blur(20px)}
+.style-label{font-family:var(--font-d);font-size:2rem;letter-spacing:.04em;margin:.25rem 0;color:var(--red)}
+.style-desc{font-size:.82rem;color:var(--text2);line-height:1.5}
+.profile-section{margin-bottom:1.5rem}
+.profile-section h3{font-family:var(--font-m);font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.tech-suggest-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem;margin-bottom:.4rem}
+.tech-suggest-name{font-weight:600;font-size:.88rem;margin-bottom:.2rem}
+.tech-suggest-why{font-size:.75rem;color:var(--text3);line-height:1.4}
+.belt-select{display:grid;gap:.4rem;margin-bottom:.5rem}
+.belt-opt{padding:.4rem;border-radius:var(--radius-sm);border:2px solid transparent;cursor:pointer;text-align:center;font-size:.65rem;font-family:var(--font-m);font-weight:600;transition:all .2s}
+.belt-opt.active{border-color:var(--text)!important}
+.stripe-row{display:flex;gap:.4rem;margin-bottom:.5rem}
+.stripe-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-family:var(--font-m);color:var(--text3);transition:all .2s}
+.stripe-dot.active{border-color:#fff;background:#fff;color:var(--bg)}
+
+/* ── DASHBOARD ── */
+.dash-stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem;display:flex;flex-direction:column;gap:.2rem}
+.dash-stat-val{font-family:var(--font-d);font-size:2rem;letter-spacing:.02em;line-height:1}
+.dash-stat-lbl{font-size:.65rem;font-family:var(--font-m);color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem}
+.chart-title{font-size:.68rem;font-family:var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem}
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.pos-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.75rem;text-align:center}
+.pos-cell-pct{font-family:var(--font-d);font-size:1.6rem;line-height:1;margin-bottom:.2rem}
+.pos-cell-lbl{font-size:.63rem;font-family:var(--font-m);color:var(--text3);letter-spacing:.08em;text-transform:uppercase}
+
+/* ── ONBOARDING ── */
+#onboarding{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem;text-align:center;overflow-y:auto}
+.ob-logo{font-family:var(--font-d);font-size:4rem;color:var(--red);letter-spacing:.08em;line-height:1}
+.ob-tagline{font-size:.78rem;font-family:var(--font-m);color:var(--text3);letter-spacing:.15em;text-transform:uppercase;margin:.25rem 0 2rem}
+.ob-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:380px;text-align:left}
+.ob-card h2{font-family:var(--font-d);font-size:1.5rem;margin-bottom:1.25rem;letter-spacing:.03em}
+
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end}
+#modal-overlay.open{display:flex}
+#modal{background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-height:92dvh;overflow-y:auto;padding:1.25rem;border-top:1px solid var(--border2)}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 1rem}
+.modal-title{font-family:var(--font-d);font-size:1.6rem;margin-bottom:1rem;letter-spacing:.02em}
+
+/* ── MISC ── */
+.section-header{font-family:var(--font-m);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin:1.25rem 0 .6rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text3)}
+.empty-state svg{width:40px;height:40px;stroke:var(--text3);margin-bottom:.75rem;opacity:.4;fill:none}
+.empty-state p{font-size:.85rem}
+.divider{height:1px;background:var(--border);margin:1rem 0}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:1rem;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.65rem 1.2rem;border-radius:var(--radius-sm);font-size:.82rem;font-family:var(--font-m);z-index:999;transition:transform .3s ease;white-space:nowrap;max-width:90vw}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{border-color:var(--green-bright);color:var(--green-bright)}
+#toast.error{border-color:var(--red);color:var(--red)}
+#toast.warn{border-color:var(--pending);color:var(--pending)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.view.active>*{animation:fadeIn .28s ease forwards;opacity:0}
+.view.active>*:nth-child(1){animation-delay:0s}
+.view.active>*:nth-child(2){animation-delay:.05s}
+.view.active>*:nth-child(3){animation-delay:.1s}
+.view.active>*:nth-child(4){animation-delay:.15s}
+.view.active>*:nth-child(5){animation-delay:.2s}
+.view.active>*:nth-child(6){animation-delay:.25s}
+
+/* ── LOADING ── */
+#loading-screen{position:fixed;inset:0;background:var(--bg);z-index:400;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
+.loading-logo{font-family:var(--font-d);font-size:3rem;color:var(--red);letter-spacing:.1em}
+.loading-bar{width:120px;height:2px;background:var(--border2);border-radius:1px;overflow:hidden}
+.loading-fill{height:100%;background:var(--red);animation:loadpulse 1.2s ease-in-out infinite}
+@keyframes loadpulse{0%{width:0;margin-left:0}50%{width:80%;margin-left:10%}100%{width:0;margin-left:120px}}
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div class="loading-logo">TATAMI</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+  <div style="font-size:.72rem;font-family:var(--font-m);color:var(--text3);letter-spacing:.1em">CONNECTING TO DATABASE</div>
+</div>
+
+<!-- Onboarding -->
+<div id="onboarding" style="display:none">
+  <div class="ob-logo">TATAMI</div>
+  <div class="ob-tagline">BJJ Progress Intelligence</div>
+  <div class="ob-card">
+    <h2>Set Up Your Profile</h2>
+    <div class="form-group"><label>Your Name</label><input id="ob-name" type="text" placeholder="e.g. Alex Rivera"></div>
+    <div class="form-group"><label>Gym / Academy</label><input id="ob-gym" type="text" placeholder="e.g. Gracie Barra Downtown"></div>
+    <div class="form-group">
+      <label>Belt</label>
+      <div class="belt-select" id="ob-belt-sel" style="grid-template-columns:repeat(5,1fr)">
+        <div class="belt-opt active" data-belt="white" style="background:#e8e0d8;color:#222">White</div>
+        <div class="belt-opt" data-belt="blue" style="background:#1a4a7a;color:#fff">Blue</div>
+        <div class="belt-opt" data-belt="purple" style="background:#4a1a7a;color:#fff">Purple</div>
+        <div class="belt-opt" data-belt="brown" style="background:#5c3317;color:#fff">Brown</div>
+        <div class="belt-opt" data-belt="black" style="background:#111;color:#ccc;border:1px solid #444">Black</div>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-top:.5rem">
+        <span style="font-size:.68rem;font-family:var(--font-m);color:var(--text3)">STRIPES:</span>
+        <div class="stripe-row" id="ob-stripes">
+          <div class="stripe-dot" data-s="1">1</div><div class="stripe-dot" data-s="2">2</div>
+          <div class="stripe-dot" data-s="3">3</div><div class="stripe-dot" data-s="4">4</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Training Since</label><input id="ob-start" type="date"></div>
+      <div class="form-group"><label>Height (cm)</label><input id="ob-height" type="number" placeholder="175"></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="completeOnboarding()">Start Training Log →</button>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+
+  <!-- DASHBOARD -->
+  <div id="view-dash" class="view active">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="dash-greeting">TATAMI</div>
+        <div class="page-sub" id="dash-belt-sub">loading…</div>
+      </div>
+      <div id="dash-streak-badge" style="text-align:right"></div>
+    </div>
+    <div class="grid3" id="dash-stats-grid" style="margin-bottom:.75rem"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Training Volume — Last 8 Weeks</div>
+      <canvas id="chart-training" height="130"></canvas>
+    </div>
+    <div class="section-header">Position Distribution</div>
+    <div class="pos-grid" id="dash-pos-grid" style="margin-bottom:.75rem"></div>
+    <div class="section-header">Your Game</div>
+    <div id="dash-your-game"></div>
+    <div class="section-header">Recent Sessions</div>
+    <div id="dash-recent"></div>
+  </div>
+
+  <!-- LOG -->
+  <div id="view-log" class="view">
+    <div class="page-header">
+      <div><div class="page-title">LOG</div><div class="page-sub" id="log-count">0 sessions</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openLogModal(null)">+ New</button>
+    </div>
+    <div id="sessions-list"></div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div id="view-lib" class="view">
+    <div class="page-header">
+      <div><div class="page-title">LIBRARY</div><div class="page-sub" id="lib-count">techniques</div></div>
+      <button class="btn btn-yellow btn-sm" onclick="openSubmitTechModal()">+ Submit</button>
+    </div>
+    <div style="position:relative;margin-bottom:.75rem">
+      <input id="lib-search" type="text" placeholder="Search techniques…" oninput="renderLibrary()" style="padding-left:2.2rem">
+      <svg style="position:absolute;left:.7rem;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text3);fill:none;stroke-width:2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <div class="lib-filter" id="lib-filter"></div>
+    <!-- My pending submissions -->
+    <div id="my-submissions-section" style="display:none">
+      <div class="section-header">My Submissions</div>
+      <div id="my-submissions-list"></div>
+    </div>
+    <div id="lib-list"></div>
+  </div>
+
+  <!-- SUBMISSIONS -->
+  <div id="view-subs" class="view">
+    <div class="page-header">
+      <div><div class="page-title">SUBS</div><div class="page-sub">submission analytics</div></div>
+    </div>
+    <div class="grid2" id="sub-top-stats" style="margin-bottom:.75rem"></div>
+    <div class="chart-wrap">
+      <div class="chart-title">Attempts vs Finishes</div>
+      <canvas id="chart-subs" height="140"></canvas>
+    </div>
+    <div class="section-header">Ranked by Finish Rate</div>
+    <div id="sub-ranking"></div>
+    <div class="section-header">Raw Counts</div>
+    <div class="card"><div id="sub-raw"></div></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div id="view-profile" class="view">
+    <div class="page-header">
+      <div><div class="page-title">PROFILE</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="saveProfileAndRender()">Save</button>
+    </div>
+
+    <div class="profile-section">
+      <h3>Belt & Rank</h3>
+      <div class="belt-select" id="profile-belt-sel" style="grid-template-columns:repeat(5,1fr)">
+        <div class="belt-opt" data-belt="white" style="background:#e8e0d8;color:#222">White</div>
+        <div class="belt-opt" data-belt="blue" style="background:#1a4a7a;color:#fff">Blue</div>
+        <div class="belt-opt" data-belt="purple" style="background:#4a1a7a;color:#fff">Purple</div>
+        <div class="belt-opt" data-belt="brown" style="background:#5c3317;color:#fff">Brown</div>
+        <div class="belt-opt" data-belt="black" style="background:#111;color:#ccc;border:1px solid #444">Black</div>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <span style="font-size:.68rem;font-family:var(--font-m);color:var(--text3)">STRIPES:</span>
+        <div class="stripe-row" id="profile-stripes">
+          <div class="stripe-dot" data-s="1">1</div><div class="stripe-dot" data-s="2">2</div>
+          <div class="stripe-dot" data-s="3">3</div><div class="stripe-dot" data-s="4">4</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>Physical Profile</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Height (cm)</label><input id="p-height" type="number" placeholder="175"></div>
+        <div class="form-group"><label>Weight (kg)</label><input id="p-weight" type="number" placeholder="75"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Limb Length</label>
+          <select id="p-limb">
+            <option value="">— Select —</option>
+            <option value="short">Short</option>
+            <option value="same">Average</option>
+            <option value="long">Long</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Flexibility</label>
+          <select id="p-flex">
+            <option value="">— Select —</option>
+            <option value="low">Low</option>
+            <option value="mid">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <h3>Playstyle Prediction</h3>
+      <div id="style-prediction"></div>
+    </div>
+    <div class="profile-section">
+      <h3>Style from Data</h3>
+      <div id="style-detection"></div>
+    </div>
+    <div class="profile-section">
+      <h3>Data Management</h3>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="exportData()">Export JSON</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--red);color:var(--red)" onclick="clearData()">Reset All Data</button>
+      </div>
+    </div>
+    <div class="profile-section">
+      <h3>App</h3>
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:.75rem;line-height:1.5">Install TATAMI on your home screen for the full app experience — works offline too.</div>
+      <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+        <button id="pwa-install-btn" class="btn btn-ghost btn-sm" style="display:none;border-color:var(--green-bright);color:var(--green-bright)" onclick="triggerPWAInstall()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v13M5 15l7 7 7-7"/><path d="M3 19h18"/></svg>
+          Install App
+        </button>
+        <div style="font-size:.72rem;font-family:var(--font-m);color:var(--text3);align-self:center" id="pwa-installed-note"></div>
+      </div>
+      <div style="margin-top:.75rem;font-size:.72rem;color:var(--text3);font-family:var(--font-m)">v2.0.0 — TATAMI BJJ Tracker</div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- Bottom Nav -->
+<nav id="main-nav" style="display:none">
+  <button class="nav-btn active" onclick="switchView('dash',this)">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Dash
+  </button>
+  <button class="nav-btn" onclick="switchView('log',this)">
+    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Log
+  </button>
+  <button class="nav-btn" onclick="switchView('lib',this)">
+    <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+    Library
+    <span class="nav-badge" id="lib-pending-badge"></span>
+  </button>
+  <button class="nav-btn" onclick="switchView('subs',this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+    Subs
+  </button>
+  <button class="nav-btn" onclick="switchView('profile',this)">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </button>
+</nav>
+
+<!-- Modal -->
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const CAT_COLORS = {
+  guard:'#457b9d',pass:'#c9a84c',submission:'#e63946',
+  sweep:'#52b788',takedown:'#a8dadc',control:'#9b72cf',escape:'#a89f94',other:'#777'
+};
+const BELT_COLORS = {
+  white:'#e8e0d8',blue:'#1a4a7a',purple:'#4a1a7a',brown:'#5c3317',black:'#222'
+};
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  profile: { name:'', gym:'', belt:'white', stripes:0, start_date:'', height:'', weight:'', limb_length:'', flexibility:'' },
+  sessions: [],
+};
+let techDB = []; // approved techniques from server
+let mySubmissions = []; // user's own pending/rejected submissions
+let editingId = null;
+let logTechs = [];
+let logSubs = [];
+let chartTraining = null;
+let chartSubs = null;
+let libFilterCat = 'all';
+let obBelt = 'white';
+let obStripes = 0;
+
+// ─── API HELPERS ─────────────────────────────────────────────────────────────
+async function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(path, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const [profile, sessions, techniques] = await Promise.all([
+      api('GET', '/api/profile'),
+      api('GET', '/api/sessions'),
+      api('GET', '/api/techniques'),
+    ]);
+    state.profile = profile;
+    state.sessions = sessions;
+    techDB = techniques;
+
+    document.getElementById('loading-screen').style.display = 'none';
+
+    if (!profile.name) {
+      document.getElementById('onboarding').style.display = 'flex';
+      document.getElementById('ob-start').value = new Date().toISOString().split('T')[0];
+      initOnboarding();
+    } else {
+      showApp();
+      await loadMySubmissions();
+    }
+  } catch (e) {
+    document.getElementById('loading-screen').innerHTML = `
+      <div style="font-family:var(--font-m);color:var(--red);font-size:.85rem;text-align:center;padding:2rem">
+        <div style="font-size:2rem;margin-bottom:1rem">⚠</div>
+        <div>Cannot connect to server</div>
+        <div style="color:var(--text3);margin-top:.5rem;font-size:.75rem">Make sure the server is running on port 3000</div>
+        <div style="color:var(--text3);margin-top:.25rem;font-size:.7rem">npm start</div>
+      </div>`;
+  }
+});
+
+function showApp() {
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('main-nav').style.display = 'flex';
+  initApp();
+}
+
+async function loadMySubmissions() {
+  const name = state.profile.name;
+  if (!name) return;
+  mySubmissions = await api('GET', `/api/techniques/my-submissions?submitted_by=${encodeURIComponent(name)}`);
+  const pending = mySubmissions.filter(s => s.status === 'pending').length;
+  const badge = document.getElementById('lib-pending-badge');
+  if (pending > 0) { badge.textContent = pending; badge.classList.add('show'); }
+  else badge.classList.remove('show');
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────────────────
+function initOnboarding() {
+  document.querySelectorAll('#ob-belt-sel .belt-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#ob-belt-sel .belt-opt').forEach(x => x.classList.remove('active'));
+      el.classList.add('active'); obBelt = el.dataset.belt;
+    });
+  });
+  document.querySelectorAll('#ob-stripes .stripe-dot').forEach(el => {
+    el.addEventListener('click', () => {
+      const v = parseInt(el.dataset.s);
+      obStripes = (obStripes === v) ? 0 : v;
+      document.querySelectorAll('#ob-stripes .stripe-dot').forEach(x => x.classList.toggle('active', parseInt(x.dataset.s) <= obStripes));
+    });
+  });
+}
+
+async function completeOnboarding() {
+  const name = document.getElementById('ob-name').value.trim();
+  if (!name) { showToast('Please enter your name', 'error'); return; }
+  state.profile = {
+    name, gym: document.getElementById('ob-gym').value.trim(),
+    belt: obBelt, stripes: obStripes,
+    start_date: document.getElementById('ob-start').value,
+    height: document.getElementById('ob-height').value || '',
+    weight: '', limb_length: '', flexibility: ''
+  };
+  await api('PUT', '/api/profile', state.profile);
+  document.getElementById('onboarding').style.display = 'none';
+  showApp();
+}
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function switchView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'dash') renderDashboard();
+  if (id === 'log')  renderLog();
+  if (id === 'lib')  { loadMySubmissions().then(renderLibrary); }
+  if (id === 'subs') renderSubmissions();
+  if (id === 'profile') renderProfile();
+}
+
+function initApp() {
+  renderDashboard();
+  renderLog();
+  renderLibrary();
+  renderSubmissions();
+  renderProfile();
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const p = state.profile, S = state.sessions;
+  document.getElementById('dash-greeting').textContent = (p.name || 'TATAMI').toUpperCase();
+  const beltCol = BELT_COLORS[p.belt] || '#aaa';
+  document.getElementById('dash-belt-sub').innerHTML = `<span style="color:${beltCol}">●</span> ${p.belt} belt${p.stripes ? ` · ${p.stripes}s` : ''} ${p.gym ? '· ' + p.gym : ''}`;
+
+  const streak = calcStreak();
+  document.getElementById('dash-streak-badge').innerHTML = `
+    <div style="font-family:var(--font-d);font-size:1.8rem;line-height:1">${streak > 0 ? '🔥' : ''} ${streak}</div>
+    <div style="font-size:.6rem;font-family:var(--font-m);color:var(--text3)">DAY STREAK</div>`;
+
+  const totalMin = S.reduce((a, s) => a + s.duration, 0);
+  const lib = buildLib();
+  const yourGame = Object.values(lib).filter(t => t.drills >= 15).length;
+  document.getElementById('dash-stats-grid').innerHTML = `
+    <div class="dash-stat"><div class="dash-stat-val">${S.length}</div><div class="dash-stat-lbl">Sessions</div></div>
+    <div class="dash-stat"><div class="dash-stat-val">${Math.round(totalMin / 60)}h</div><div class="dash-stat-lbl">Mat Time</div></div>
+    <div class="dash-stat"><div class="dash-stat-val" style="color:var(--red)">${yourGame}</div><div class="dash-stat-lbl">Your Game</div></div>`;
+
+  // Weekly chart
+  const weeks = getLast8Weeks();
+  const ctx = document.getElementById('chart-training').getContext('2d');
+  if (chartTraining) chartTraining.destroy();
+  chartTraining = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: weeks.map(w => w.label), datasets: [{ data: weeks.map(w => w.min), backgroundColor: 'rgba(230,57,70,0.5)', borderColor: '#e63946', borderWidth: 1, borderRadius: 4 }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5c5650', font: { family: 'JetBrains Mono', size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5c5650', font: { family: 'JetBrains Mono', size: 10 } } } } }
+  });
+
+  // Position grid
+  const cats = { guard: 0, pass: 0, submission: 0, sweep: 0, control: 0 };
+  S.forEach(s => s.techniques.forEach(t => {
+    const td = techDB.find(x => x.name.toLowerCase() === t.toLowerCase());
+    if (td && cats.hasOwnProperty(td.category)) cats[td.category]++;
+  }));
+  const tot = Object.values(cats).reduce((a, b) => a + b, 1);
+  document.getElementById('dash-pos-grid').innerHTML = `
+    <div class="pos-cell"><div class="pos-cell-pct" style="color:#457b9d">${Math.round((cats.guard + cats.sweep) / tot * 100)}%</div><div class="pos-cell-lbl">Guard / Sweep</div></div>
+    <div class="pos-cell"><div class="pos-cell-pct" style="color:#c9a84c">${Math.round(cats.pass / tot * 100)}%</div><div class="pos-cell-lbl">Passing</div></div>
+    <div class="pos-cell"><div class="pos-cell-pct" style="color:#9b72cf">${Math.round(cats.control / tot * 100)}%</div><div class="pos-cell-lbl">Top Control</div></div>
+    <div class="pos-cell"><div class="pos-cell-pct" style="color:#e63946">${Math.round(cats.submission / tot * 100)}%</div><div class="pos-cell-lbl">Submissions</div></div>`;
+
+  // Your game
+  const game = Object.values(lib).filter(t => t.drills >= 15).sort((a, b) => b.drills - a.drills).slice(0, 5);
+  document.getElementById('dash-your-game').innerHTML = game.length
+    ? game.map(t => `<div class="tech-card"><div style="display:flex;justify-content:space-between;align-items:center"><div class="tech-name">${t.name}</div><span class="tech-level your-game">⭐ YOUR GAME</span></div><div class="tech-meta"><span>${t.drills} drills</span><span>${t.sessions} sessions</span><span style="color:${CAT_COLORS[t.cat] || '#aaa'}">${t.cat}</span></div></div>`).join('')
+    : '<div style="color:var(--text3);font-size:.82rem;padding:.5rem 0">Keep drilling — techniques with 15+ reps enter Your Game.</div>';
+
+  const recent = S.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
+  document.getElementById('dash-recent').innerHTML = recent.length
+    ? recent.map(s => sessionCard(s, true)).join('')
+    : '<div class="empty-state"><p>No sessions yet. Log your first training!</p></div>';
+  attachCardListeners();
+}
+
+function buildLib() {
+  const lib = {};
+  state.sessions.forEach(s => {
+    s.techniques.forEach(t => {
+      const key = t.toLowerCase();
+      const td = techDB.find(x => x.name.toLowerCase() === key);
+      if (!lib[key]) lib[key] = { name: t, cat: td ? td.category : 'other', drills: 0, sessions: 0 };
+      lib[key].drills += Math.max(1, Math.round((s.drills || 1) / Math.max(s.techniques.length, 1)));
+      lib[key].sessions++;
+    });
+  });
+  return lib;
+}
+
+// ─── LOG ─────────────────────────────────────────────────────────────────────
+function renderLog() {
+  const sorted = state.sessions.slice().sort((a, b) => b.date.localeCompare(a.date));
+  document.getElementById('log-count').textContent = `${sorted.length} session${sorted.length !== 1 ? 's' : ''}`;
+  const el = document.getElementById('sessions-list');
+  if (!sorted.length) {
+    el.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><p>No sessions logged yet.<br>Tap <strong>+ New</strong> to log your first training.</p></div>`;
+    return;
+  }
+  el.innerHTML = sorted.map(s => sessionCard(s, false)).join('');
+  attachCardListeners();
+}
+
+function sessionCard(s, compact) {
+  const subCount = (s.submissions || []).length;
+  const subSuc = (s.submissions || []).filter(x => x.success).length;
+  return `<div class="session-card" data-id="${s.id}">
+    <div class="session-date">${formatDate(s.date)}</div>
+    <div class="session-title">${sessionTitle(s)}</div>
+    <div class="session-meta">
+      <span>⏱ ${s.duration}min</span>
+      ${s.sparring ? `<span>🤼 ${s.sparring} rounds</span>` : ''}
+      ${s.drills ? `<span>🔁 ${s.drills} drills</span>` : ''}
+      ${subCount ? `<span>🎯 ${subSuc}/${subCount} subs</span>` : ''}
+    </div>
+    <div class="session-detail">
+      ${s.techniques.length ? `<div style="margin-bottom:.5rem">${s.techniques.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+      ${s.notes ? `<div style="font-size:.82rem;color:var(--text2);line-height:1.5;margin-bottom:.6rem;font-style:italic">"${s.notes}"</div>` : ''}
+      ${(s.submissions || []).length ? `<div>${(s.submissions).map(sub => `<span class="tag ${sub.success ? 'green' : 'red'}">${sub.success ? '✓' : '✗'} ${sub.name}</span>`).join('')}</div><div style="height:.5rem"></div>` : ''}
+      ${!compact ? `<div style="display:flex;gap:.5rem"><button class="btn btn-ghost btn-sm" onclick="openLogModal('${s.id}');event.stopPropagation()">Edit</button><button class="btn btn-sm" style="background:var(--red-glow);border:1px solid var(--red);color:var(--red)" onclick="deleteSession('${s.id}');event.stopPropagation()">Delete</button></div>` : ''}
+    </div>
+  </div>`;
+}
+
+function sessionTitle(s) {
+  if (!s.techniques.length) return 'Open Mat';
+  const cats = {};
+  s.techniques.forEach(t => { const td = techDB.find(x => x.name.toLowerCase() === t.toLowerCase()); if (td) cats[td.category] = (cats[td.category] || 0) + 1; });
+  const top = Object.entries(cats).sort((a, b) => b[1] - a[1])[0];
+  const labels = { guard: 'Guard Work', pass: 'Passing', submission: 'Submission Hunting', sweep: 'Sweeps', control: 'Top Control', takedown: 'Takedowns', escape: 'Escapes' };
+  return top ? (labels[top[0]] || 'Training') : 'Training Session';
+}
+
+function attachCardListeners() {
+  document.querySelectorAll('.session-card').forEach(c => {
+    c.addEventListener('click', () => c.classList.toggle('expanded'));
+  });
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T12:00:00');
+  return dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function openLogModal(id) {
+  editingId = id;
+  logTechs = [];
+  logSubs = [];
+  if (id) {
+    const s = state.sessions.find(x => String(x.id) === String(id));
+    if (s) { logTechs = [...s.techniques]; logSubs = s.submissions ? [...s.submissions] : []; }
+  }
+  document.getElementById('modal-title').textContent = id ? 'Edit Session' : 'Log Session';
+  document.getElementById('modal-body').innerHTML = logModalHTML();
+  document.getElementById('modal-overlay').classList.add('open');
+  if (id) {
+    const s = state.sessions.find(x => String(x.id) === String(id));
+    if (s) {
+      document.getElementById('lf-date').value = s.date;
+      document.getElementById('lf-dur').value = s.duration;
+      document.getElementById('lf-spar').value = s.sparring || '';
+      document.getElementById('lf-drills').value = s.drills || '';
+      document.getElementById('lf-notes').value = s.notes || '';
+    }
+  } else {
+    document.getElementById('lf-date').value = new Date().toISOString().split('T')[0];
+  }
+  renderTechTags();
+  renderSubList();
+  setupTechInput();
+}
+
+function logModalHTML() {
+  return `
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input id="lf-date" type="date"></div>
+      <div class="form-group"><label>Duration (min)</label><input id="lf-dur" type="number" placeholder="60"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Sparring Rounds</label><input id="lf-spar" type="number" placeholder="0"></div>
+      <div class="form-group"><label>Drills (reps)</label><input id="lf-drills" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Techniques Drilled</label>
+      <div id="tech-input-wrap">
+        <input id="tech-input" type="text" placeholder="Type to search techniques…" autocomplete="off">
+        <div id="tech-suggestions"></div>
+      </div>
+      <div id="tech-tags"></div>
+    </div>
+    <div class="form-group">
+      <label>Submissions Attempted</label>
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <input id="sub-input" type="text" placeholder="Submission name…" style="flex:1">
+        <button class="btn btn-ghost btn-sm" onclick="addSubEntry()">Add</button>
+      </div>
+      <div id="sub-list"></div>
+    </div>
+    <div class="form-group"><label>Notes</label><textarea id="lf-notes" placeholder="What clicked today? What needs work?"></textarea></div>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-primary" style="flex:1" onclick="saveSession()">Save Session</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>`;
+}
+
+function setupTechInput() {
+  const inp = document.getElementById('tech-input');
+  const sug = document.getElementById('tech-suggestions');
+  inp.addEventListener('input', () => {
+    const q = inp.value.toLowerCase().trim();
+    if (!q) { sug.style.display = 'none'; return; }
+    const matches = techDB.filter(t => t.name.toLowerCase().includes(q) && !logTechs.includes(t.name)).slice(0, 8);
+    if (!matches.length) { sug.style.display = 'none'; return; }
+    sug.innerHTML = matches.map(t => `<div class="tech-suggestion" onclick="addTech('${t.name.replace(/'/g,"\\'")}')"><span>${t.name}</span><span class="cat">${t.category}</span></div>`).join('');
+    sug.style.display = 'block';
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = inp.value.trim();
+      if (q && !logTechs.includes(q)) { addTech(q); }
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('click', e => { if (!document.getElementById('tech-input-wrap')?.contains(e.target)) sug.style.display = 'none'; });
+}
+
+function addTech(name) {
+  if (!logTechs.includes(name)) { logTechs.push(name); renderTechTags(); }
+  const inp = document.getElementById('tech-input');
+  const sug = document.getElementById('tech-suggestions');
+  if (inp) inp.value = '';
+  if (sug) sug.style.display = 'none';
+}
+
+function removeTech(name) {
+  logTechs = logTechs.filter(t => t !== name);
+  renderTechTags();
+}
+
+function renderTechTags() {
+  const el = document.getElementById('tech-tags');
+  if (!el) return;
+  el.innerHTML = logTechs.map(t => `<span class="tag">${t}<span class="remove" onclick="removeTech('${t.replace(/'/g,"\\'")}')">×</span></span>`).join('');
+}
+
+function addSubEntry() {
+  const inp = document.getElementById('sub-input');
+  const name = inp.value.trim();
+  if (!name) return;
+  logSubs.push({ name, success: false });
+  inp.value = '';
+  renderSubList();
+}
+
+function toggleSubSuccess(i) {
+  logSubs[i].success = !logSubs[i].success;
+  renderSubList();
+}
+
+function removeSub(i) {
+  logSubs.splice(i, 1);
+  renderSubList();
+}
+
+function renderSubList() {
+  const el = document.getElementById('sub-list');
+  if (!el) return;
+  el.innerHTML = logSubs.map((s, i) => `
+    <div class="sub-row">
+      <span>${s.name}</span>
+      <div class="toggle-btn ${s.success ? 'success' : ''}" onclick="toggleSubSuccess(${i})">${s.success ? '✓ Got it' : '✗ Missed'}</div>
+      <button class="del-sub" onclick="removeSub(${i})">×</button>
+    </div>`).join('');
+}
+
+async function saveSession() {
+  const date = document.getElementById('lf-date').value;
+  const dur = parseInt(document.getElementById('lf-dur').value) || 0;
+  if (!date || !dur) { showToast('Date and duration required', 'error'); return; }
+  const payload = {
+    date, duration: dur,
+    sparring: parseInt(document.getElementById('lf-spar').value) || 0,
+    drills: parseInt(document.getElementById('lf-drills').value) || 0,
+    notes: document.getElementById('lf-notes').value.trim(),
+    techniques: logTechs, submissions: logSubs
+  };
+  try {
+    if (editingId) {
+      await api('PUT', `/api/sessions/${editingId}`, payload);
+      const idx = state.sessions.findIndex(s => String(s.id) === String(editingId));
+      if (idx > -1) state.sessions[idx] = { ...state.sessions[idx], ...payload };
+    } else {
+      const { id } = await api('POST', '/api/sessions', payload);
+      state.sessions.push({ id, ...payload });
+    }
+    closeModal();
+    renderLog();
+    showToast('Session saved ✓', 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function deleteSession(id) {
+  if (!confirm('Delete this session?')) return;
+  await api('DELETE', `/api/sessions/${id}`);
+  state.sessions = state.sessions.filter(s => String(s.id) !== String(id));
+  renderLog();
+  showToast('Session deleted');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+// ─── LIBRARY ─────────────────────────────────────────────────────────────────
+function renderLibrary() {
+  const lib = buildLib();
+  const cats = ['all', ...Object.keys(CAT_COLORS)];
+  document.getElementById('lib-filter').innerHTML = cats.map(c =>
+    `<button class="lib-filter-btn${libFilterCat === c ? ' active' : ''}" onclick="setLibFilter('${c}')">${c}</button>`
+  ).join('');
+
+  // My submissions section
+  const msSection = document.getElementById('my-submissions-section');
+  const msList = document.getElementById('my-submissions-list');
+  const userSubs = mySubmissions.filter(s => s.status !== 'approved');
+  if (userSubs.length) {
+    msSection.style.display = 'block';
+    msList.innerHTML = userSubs.map(s => {
+      const isPending = s.status === 'pending';
+      const isRejected = s.status === 'rejected';
+      return `<div class="tech-card" style="border-color:${isPending ? 'var(--pending)' : 'rgba(230,57,70,.3)'}">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="tech-name">${s.name}</div>
+          <span class="tech-level ${isPending ? 'pending-badge' : 'rejected-badge'}">${isPending ? '⏳ PENDING' : '✗ REJECTED'}</span>
+        </div>
+        <div class="tech-meta"><span style="color:${CAT_COLORS[s.category]||'#aaa'}">${s.category}</span>${isRejected && s.rejection_reason ? `<span style="color:var(--red)">Reason: ${s.rejection_reason}</span>` : ''}</div>
+        ${isPending ? `<div style="font-size:.72rem;color:var(--text3);margin-top:.3rem">Awaiting admin review</div>` : ''}
+      </div>`;
+    }).join('');
+  } else {
+    msSection.style.display = 'none';
+  }
+
+  const q = (document.getElementById('lib-search')?.value || '').toLowerCase();
+  let techs = Object.values(lib);
+  if (libFilterCat !== 'all') techs = techs.filter(t => t.cat === libFilterCat);
+  if (q) techs = techs.filter(t => t.name.toLowerCase().includes(q));
+  techs.sort((a, b) => b.drills - a.drills);
+
+  // Also show all approved DB techniques even if not drilled
+  if (!q && libFilterCat === 'all') {
+    const libKeys = new Set(techs.map(t => t.name.toLowerCase()));
+    const extra = techDB.filter(t => !libKeys.has(t.name.toLowerCase()));
+    const extraItems = extra.map(t => ({ name: t.name, cat: t.category, drills: 0, sessions: 0 }));
+    // Don't add all — just show user's logged ones
+    // Just show what user has logged
+  }
+
+  document.getElementById('lib-count').textContent = `${techs.length} technique${techs.length !== 1 ? 's' : ''}`;
+  const el = document.getElementById('lib-list');
+  if (!techs.length) {
+    el.innerHTML = `<div class="empty-state"><p>${q ? 'No techniques match your search.' : 'Log sessions to build your technique library.'}</p></div>`;
+    return;
+  }
+  el.innerHTML = techs.map(t => {
+    const lv = techLevel(t.drills);
+    const pct = Math.min(100, Math.round(t.drills / 20 * 100));
+    return `<div class="tech-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">
+        <div class="tech-name">${t.name}</div>
+        <span class="tech-level ${lv.cls}">${lv.label}</span>
+      </div>
+      <div class="tech-meta"><span>${t.drills} drills</span><span>${t.sessions} session${t.sessions !== 1 ? 's' : ''}</span><span style="color:${CAT_COLORS[t.cat] || '#aaa'}">${t.cat}</span></div>
+      <div class="pbar" style="margin-top:.4rem"><div class="pbar-fill" style="width:${pct}%;background:${CAT_COLORS[t.cat] || 'var(--red)'}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function setLibFilter(cat) { libFilterCat = cat; renderLibrary(); }
+
+function techLevel(drills) {
+  if (drills >= 15) return { cls: 'your-game', label: '⭐ YOUR GAME' };
+  if (drills >= 8)  return { cls: 'comfortable', label: 'COMFORTABLE' };
+  if (drills >= 3)  return { cls: 'developing', label: 'DEVELOPING' };
+  return { cls: 'exploring', label: 'EXPLORING' };
+}
+
+// ─── SUBMIT TECHNIQUE MODAL ───────────────────────────────────────────────────
+function openSubmitTechModal() {
+  document.getElementById('modal-title').textContent = 'Submit New Technique';
+  document.getElementById('modal-body').innerHTML = `
+    <p style="font-size:.82rem;color:var(--text2);margin-bottom:1rem;line-height:1.5">
+      Can't find a technique in the database? Submit it here — an admin will review and approve it, then it'll appear for everyone.
+    </p>
+    <div class="form-group"><label>Technique / Position Name</label><input id="st-name" type="text" placeholder="e.g. Leg Lasso Guard"></div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="st-cat">
+        <option value="">— Select Category —</option>
+        <option value="guard">Guard</option>
+        <option value="pass">Pass</option>
+        <option value="submission">Submission</option>
+        <option value="sweep">Sweep</option>
+        <option value="takedown">Takedown</option>
+        <option value="control">Control</option>
+        <option value="escape">Escape</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Description (optional)</label><textarea id="st-desc" placeholder="Briefly describe the technique, variations, or why it should be added…"></textarea></div>
+    <div class="form-group"><label>Your Name</label><input id="st-submitter" type="text" value="${state.profile.name || ''}" placeholder="Your name"></div>
+    <div style="display:flex;gap:.6rem">
+      <button class="btn btn-yellow" style="flex:1" onclick="submitNewTechnique()">Submit for Review</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function submitNewTechnique() {
+  const name = document.getElementById('st-name').value.trim();
+  const category = document.getElementById('st-cat').value;
+  const description = document.getElementById('st-desc').value.trim();
+  const submitted_by = document.getElementById('st-submitter').value.trim() || state.profile.name || 'Anonymous';
+  if (!name) { showToast('Technique name required', 'error'); return; }
+  if (!category) { showToast('Please select a category', 'error'); return; }
+  try {
+    await api('POST', '/api/techniques/submit', { name, category, description, submitted_by });
+    closeModal();
+    await loadMySubmissions();
+    renderLibrary();
+    showToast('Submitted! Awaiting admin review ⏳', 'warn');
+  } catch (e) {
+    if (e.message.includes('already exists')) {
+      showToast(e.message, 'warn');
+    } else {
+      showToast('Error: ' + e.message, 'error');
+    }
+  }
+}
+
+// ─── SUBMISSIONS ─────────────────────────────────────────────────────────────
+function renderSubmissions() {
+  const allSubs = [];
+  state.sessions.forEach(s => (s.submissions || []).forEach(sub => allSubs.push(sub)));
+  const total = allSubs.length, suc = allSubs.filter(s => s.success).length;
+  const rate = total ? Math.round(suc / total * 100) : 0;
+  document.getElementById('sub-top-stats').innerHTML = `
+    <div class="card"><div class="card-label">Total Attempts</div><div class="card-val">${total}</div></div>
+    <div class="card"><div class="card-label">Finish Rate</div><div class="card-val red">${rate}%</div></div>`;
+
+  const byName = {};
+  allSubs.forEach(s => {
+    if (!byName[s.name]) byName[s.name] = { att: 0, suc: 0 };
+    byName[s.name].att++;
+    if (s.success) byName[s.name].suc++;
+  });
+  const names = Object.keys(byName).sort((a, b) => byName[b].att - byName[a].att);
+
+  const ctx = document.getElementById('chart-subs').getContext('2d');
+  if (chartSubs) chartSubs.destroy();
+  if (names.length) {
+    chartSubs = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: names,
+        datasets: [
+          { label: 'Attempts', data: names.map(n => byName[n].att), backgroundColor: 'rgba(69,123,157,0.5)', borderColor: '#457b9d', borderWidth: 1, borderRadius: 4 },
+          { label: 'Finishes', data: names.map(n => byName[n].suc), backgroundColor: 'rgba(82,183,136,0.7)', borderColor: '#52b788', borderWidth: 1, borderRadius: 4 }
+        ]
+      },
+      options: { responsive: true, plugins: { legend: { labels: { color: '#a89f94', font: { family: 'JetBrains Mono', size: 10 } } } }, scales: { x: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5c5650', font: { family: 'JetBrains Mono', size: 10 } } }, y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5c5650', font: { family: 'JetBrains Mono', size: 10 }, stepSize: 1 } } } }
+    });
+  }
+
+  const ranked = names.slice().sort((a, b) => (byName[b].suc / byName[b].att) - (byName[a].suc / byName[a].att));
+  document.getElementById('sub-ranking').innerHTML = ranked.length
+    ? ranked.map((n, i) => {
+        const d = byName[n]; const pct = Math.round(d.suc / d.att * 100);
+        return `<div class="sub-bar-wrap"><div class="sub-bar-name">${i + 1}. ${n}<span>${pct}% · ${d.suc}/${d.att}</span></div><div class="sub-bar-track"><div class="sub-bar-att" style="width:100%"></div><div class="sub-bar-suc" style="width:${pct}%"></div></div></div>`;
+      }).join('')
+    : '<div style="color:var(--text3);font-size:.82rem">No submissions logged yet.</div>';
+
+  document.getElementById('sub-raw').innerHTML = names.map(n =>
+    `<div class="stat-row"><span class="stat-name">${n}</span><span class="stat-val">${byName[n].suc}/${byName[n].att}</span></div>`
+  ).join('') || '<div style="color:var(--text3);font-size:.82rem">No data yet.</div>';
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────────────────
+function renderProfile() {
+  const p = state.profile;
+  initBeltSel('profile-belt-sel', 'profile-stripes', p.belt, p.stripes);
+  const fields = { 'p-height': 'height', 'p-weight': 'weight', 'p-limb': 'limb_length', 'p-flex': 'flexibility' };
+  Object.entries(fields).forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = p[key] || '';
+  });
+  renderStylePrediction();
+  renderStyleDetection();
+}
+
+function initBeltSel(beltId, stripeId, curBelt, curStripes) {
+  document.querySelectorAll(`#${beltId} .belt-opt`).forEach(el => {
+    el.classList.toggle('active', el.dataset.belt === curBelt);
+    el.onclick = () => {
+      document.querySelectorAll(`#${beltId} .belt-opt`).forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      state.profile.belt = el.dataset.belt;
+    };
+  });
+  const updStripes = n => document.querySelectorAll(`#${stripeId} .stripe-dot`).forEach(x => x.classList.toggle('active', parseInt(x.dataset.s) <= n));
+  updStripes(curStripes || 0);
+  document.querySelectorAll(`#${stripeId} .stripe-dot`).forEach(el => {
+    el.onclick = () => {
+      const v = parseInt(el.dataset.s);
+      state.profile.stripes = (state.profile.stripes === v) ? 0 : v;
+      updStripes(state.profile.stripes);
+    };
+  });
+}
+
+async function saveProfileAndRender() {
+  state.profile.height = document.getElementById('p-height').value;
+  state.profile.weight = document.getElementById('p-weight').value;
+  state.profile.limb_length = document.getElementById('p-limb').value;
+  state.profile.flexibility = document.getElementById('p-flex').value;
+  await api('PUT', '/api/profile', state.profile);
+  renderStylePrediction();
+  showToast('Profile saved ✓', 'success');
+}
+
+function renderStylePrediction() {
+  const p = state.profile;
+  const el = document.getElementById('style-prediction');
+  if (!p.limb_length && !p.flexibility) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:.82rem;padding:.5rem 0">Fill in your physical profile above to generate a prediction.</div>`;
+    return;
+  }
+  const pred = predictStyle(p);
+  el.innerHTML = `<div class="style-card">
+    <div class="card-label">Predicted Playstyle</div>
+    <div class="style-label">${pred.label}</div>
+    <div class="style-desc" style="margin-bottom:1rem">${pred.desc}</div>
+    <div class="card-label" style="margin-bottom:.5rem">Mechanically Suggested Techniques</div>
+    ${pred.techs.map(t => `<div class="tech-suggest-card"><div class="tech-suggest-name">${t.name}</div><div class="tech-suggest-why">${t.why}</div></div>`).join('')}
+  </div>`;
+}
+
+function predictStyle(p) {
+  const limb = p.limb_length || 'same', flex = p.flexibility || 'mid';
+  if (flex === 'high' && limb === 'long') return { label:'The Contortionist', desc:'Your flexibility and reach create natural leverage for complex inverted guard systems.', techs:[{name:'Rubber Guard',why:'High flexibility lets you break posture with legs alone.'},{name:'Berimbolo',why:'Hip mobility enables smooth inversion to back take.'},{name:'Worm Guard',why:'Long limbs feed the lapel for powerful off-balance angles.'},{name:'Gogoplata',why:'Requires leg length and flexible hips to hold position.'},{name:'Omoplata',why:'Long legs extend the lever on the shoulder joint.'}] };
+  if (flex === 'high') return { label:'The Spider', desc:'Exceptional hip mobility makes your guard active and precise.', techs:[{name:'Butterfly Guard',why:'Hip drive sweeps use full range of motion.'},{name:'De La Riva Guard',why:'Wrapping and rotating requires hip rotation most cannot reach.'},{name:'Triangle Choke',why:'Flexible hips = faster lock, deeper angle.'},{name:'X Guard',why:'Getting underneath rewards hip mobility directly.'},{name:'Granby Roll',why:'Inversion escapes directly gated by hip mobility.'}] };
+  if (limb === 'long') return { label:'The Frame', desc:'Long limbs extend every lever mechanically. Your frames create more distance.', techs:[{name:'Guillotine',why:'Long forearm reaches further into the neck crook.'},{name:'Rear Naked Choke',why:'Longer arm covers more distance across the throat.'},{name:'Spider Guard',why:'Long arms keep opponents at range where you dictate angle.'},{name:'Lasso Guard',why:'Arm length enables wrapping without losing structure.'},{name:'Armbar',why:'Longer legs across the arm extend the lever on the elbow.'}] };
+  if (flex === 'low') return { label:'The Wrestler', desc:'Tight hips make bottom guard harder, but top pressure becomes your weapon.', techs:[{name:'Over Under Pass',why:'Torso pressure pass — uses structure over mobility.'},{name:'Knee Slice',why:'Hip drive that works without rotation.'},{name:'Mount',why:'Solid hip structure makes your mount hard to bridge.'},{name:'Side Control',why:'Rigid structure increases pressure — less movement, more weight.'},{name:'Ezekiel',why:'Top position choke requiring no hip flexibility.'}] };
+  return { label:'The Technician', desc:'Balanced profile means your game is built on timing, precision, and clean mechanics.', techs:[{name:'Half Guard',why:'The most universal guard across all body types.'},{name:'Kimura',why:'Shoulder mechanics work with correct angle, not limb length.'},{name:'Torreando Pass',why:'Rewards timing and efficiency over power.'},{name:'Scissor Sweep',why:'Leverage amplified by angle, not attributes.'},{name:'Back Control',why:'Universal finishing position — seatbelt and hooks work for all.'}] };
+}
+
+function renderStyleDetection() {
+  const S = state.sessions;
+  const el = document.getElementById('style-detection');
+  if (!S.length) { el.innerHTML = '<div style="color:var(--text3);font-size:.82rem;padding:.5rem 0">Log sessions to detect your style from data.</div>'; return; }
+  const cats = { guard: 0, pass: 0, submission: 0, sweep: 0, control: 0, takedown: 0, escape: 0 };
+  S.forEach(s => s.techniques.forEach(t => {
+    const td = techDB.find(x => x.name.toLowerCase() === t.toLowerCase());
+    if (td) cats[td.category] = (cats[td.category] || 0) + 1;
+  }));
+  const total = Object.values(cats).reduce((a, b) => a + b, 1);
+  const posStyle = (cats.guard + cats.sweep) > (cats.pass + cats.control) ? 'Guard Player' : 'Passer / Top Player';
+  const subFocus = cats.submission / total > 0.22 ? 'Submission Hunter' : 'Position First';
+  el.innerHTML = `<div class="card">
+    <div class="stat-row"><span class="stat-name">Primary Style</span><span class="stat-val">${posStyle}</span></div>
+    <div class="stat-row"><span class="stat-name">Submission Focus</span><span class="stat-val">${subFocus}</span></div>
+  </div>
+  <div style="margin-top:.5rem">
+    ${Object.entries(cats).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([cat, count]) => {
+      const pct = Math.round(count / total * 100);
+      return `<div style="margin-bottom:.4rem"><div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:.2rem"><span style="color:${CAT_COLORS[cat]||'#aaa'}">${cat}</span><span style="font-family:var(--font-m);color:var(--text3)">${pct}%</span></div><div class="pbar"><div class="pbar-fill" style="width:${pct}%;background:${CAT_COLORS[cat]||'#aaa'}"></div></div></div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ─── UTILITIES ────────────────────────────────────────────────────────────────
+function calcStreak() {
+  if (!state.sessions.length) return 0;
+  const dates = [...new Set(state.sessions.map(s => s.date))].sort().reverse();
+  const today = new Date().toISOString().split('T')[0];
+  const yest = new Date(Date.now() - 864e5).toISOString().split('T')[0];
+  if (dates[0] !== today && dates[0] !== yest) return 0;
+  let streak = 1, prev = new Date(dates[0]);
+  for (let i = 1; i < dates.length; i++) {
+    const cur = new Date(dates[i]);
+    if ((prev - cur) / 864e5 === 1) { streak++; prev = cur; } else break;
+  }
+  return streak;
+}
+
+function getLast8Weeks() {
+  return Array.from({ length: 8 }, (_, i) => {
+    const end = new Date(); end.setDate(end.getDate() - (7 - i) * 7);
+    const start = new Date(end); start.setDate(start.getDate() - 6);
+    const min = state.sessions.filter(s => { const d = new Date(s.date); return d >= start && d <= end; }).reduce((a, s) => a + s.duration, 0);
+    return { label: `W${i + 1}`, min };
+  });
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = type;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function exportData() {
+  const data = { profile: state.profile, sessions: state.sessions, exported: new Date().toISOString() };
+  const b = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'tatami-export.json'; a.click();
+  showToast('Data exported ✓', 'success');
+}
+
+async function clearData() {
+  if (!confirm('Reset ALL data? This cannot be undone.')) return;
+  for (const s of state.sessions) await api('DELETE', `/api/sessions/${s.id}`);
+  state.sessions = [];
+  await api('PUT', '/api/profile', { name:'', gym:'', belt:'white', stripes:0, start_date:'', height:'', weight:'', limb_length:'', flexibility:'' });
+  location.reload();
+}
+</script>
+
+<script>
+// ── SERVICE WORKER REGISTRATION ───────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[SW] Registered:', reg.scope))
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  });
+}
+
+// ── PWA INSTALL PROMPT ────────────────────────────────────────────────────────
+// Store the beforeinstallprompt event so we can trigger it from the profile page
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show a subtle install button if it exists in the DOM
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  showToast('TATAMI installed! 🥋', 'success');
+});
+
+function triggerPWAInstall() {
+  if (!deferredInstallPrompt) {
+    showToast('Already installed or not supported on this browser', '');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(choice => {
+    if (choice.outcome === 'accepted') showToast('Installing TATAMI… 🥋', 'success');
+    deferredInstallPrompt = null;
+  });
+}
+</script>
+</body>
+</html>
