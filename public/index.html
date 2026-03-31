@@ -184,6 +184,11 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 .create-input{flex:1;background:var(--bg3);border:1.5px solid var(--bdr2);border-radius:10px;padding:.55rem .7rem;color:var(--tx);font-size:.86rem;min-height:42px;resize:none;outline:none;font-family:'Outfit',sans-serif;line-height:1.4}
 .create-input:focus{border-color:var(--fc)}
 .create-tools{display:flex;align-items:center;gap:.4rem;margin-top:.5rem;flex-wrap:wrap}
+.create-menu{position:relative}
+.create-menu-dd{display:none;position:absolute;bottom:42px;left:0;min-width:180px;background:var(--bg2);border:1px solid var(--bdr2);border-radius:10px;padding:6px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:20}
+.create-menu-dd.open{display:block}
+.create-menu-item{width:100%;text-align:left;background:none;border:none;color:var(--tx2);padding:.45rem .55rem;border-radius:8px;cursor:pointer;font-size:.78rem}
+.create-menu-item:hover{background:var(--bg3);color:var(--tx)}
 .ct-btn{background:none;border:1.5px solid var(--bdr2);color:var(--tx3);border-radius:8px;padding:.3rem .55rem;font-size:.7rem;cursor:pointer;display:flex;align-items:center;gap:.25rem;transition:.12s;font-weight:500}
 .ct-btn:hover{border-color:var(--tx3);color:var(--tx2)}
 .ct-btn.on{border-color:var(--fc);color:var(--fc);background:var(--fc-g)}
@@ -227,8 +232,9 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 .log-priv.pub{background:var(--grn-g);color:var(--grn)}.log-priv.pvt{background:var(--bg4);color:var(--tx3)}
 
 /* EXPLORE */
-.explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 16px 14px}
 .explore-tile{position:relative;overflow:hidden;cursor:pointer;background:var(--bg3)}
+.explore-tile{border-radius:12px;border:1px solid var(--bdr)}
 .explore-tile::before{content:'';display:block;padding-top:100%}
 .explore-tile>*{position:absolute;inset:0}
 .explore-tile img,.explore-tile video{width:100%;height:100%;object-fit:cover}
@@ -237,9 +243,19 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 .et-session{display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg2));text-align:center;width:100%;height:100%}
 .et-session .emoji{font-size:1.6rem}.et-session .dur{font-weight:800;font-size:1.1rem;color:var(--gold)}
 .et-session .usr{font-size:.6rem;color:var(--tx3);margin-top:.1rem}
-/* Masonry-ish randomized sizes */
-.explore-grid .explore-tile:nth-child(7n+1){grid-column:span 2;grid-row:span 2}
-.explore-grid .explore-tile:nth-child(11n+5){grid-row:span 2}
+.explore-grid .explore-tile:nth-child(8n+1){grid-column:span 2;grid-row:span 2}
+
+/* MESSAGES */
+.msg-layout{display:grid;grid-template-columns:170px 1fr;gap:10px;height:calc(100dvh - 140px)}
+.msg-list{overflow:auto}
+.msg-thread{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;display:flex;flex-direction:column;min-height:0}
+.msg-items{flex:1;overflow:auto;padding:.6rem}
+.msg-bubble{max-width:80%;padding:.45rem .65rem;border-radius:10px;font-size:.8rem;margin-bottom:.45rem}
+.msg-bubble.me{margin-left:auto;background:var(--fc);color:#fff}
+.msg-bubble.other{background:var(--bg3);color:var(--tx2)}
+.msg-compose{display:flex;gap:.4rem;border-top:1px solid var(--bdr);padding:.55rem}
+.msg-compose input{flex:1;background:var(--bg3);border:1px solid var(--bdr2);border-radius:9px;color:var(--tx);padding:.45rem .6rem}
+@media(max-width:760px){.msg-layout{grid-template-columns:1fr;height:auto}.msg-list{max-height:210px}}
 
 /* TOGGLE */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
@@ -298,6 +314,9 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
   <div class="field"><label>Display Name</label><input name="display_name" required></div>
   <div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email"></div>
   <div class="field"><label>Password (min 6)</label><input name="password" type="password" required minlength="6" autocomplete="new-password"></div>
+  <div class="field"><label>Belt</label><select name="belt" required><option value="">Select belt</option><option>white</option><option>blue</option><option>purple</option><option>brown</option><option>black</option></select></div>
+  <div class="field"><label>Gym</label><input name="gym" required></div>
+  <div class="field"><label>Bio</label><textarea name="bio" required></textarea></div>
   <button class="btn btn-primary" type="submit">Create Account</button>
 </form>
 </div>
@@ -337,10 +356,15 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
     <div id="cp-media" class="media-preview"></div>
     <div id="cp-tags" class="tag-row"></div>
     <div class="create-tools">
-      <button class="ct-btn" onclick="document.getElementById('cp-file').click()"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>Photo</button>
+      <div class="create-menu">
+        <button class="ct-btn" onclick="toggleCreateMenu(event)">＋</button>
+        <div class="create-menu-dd" id="cp-menu-dd">
+          <button class="create-menu-item" onclick="document.getElementById('cp-file').click();closeCreateMenu()">Add photo/video</button>
+          <button class="create-menu-item" onclick="openTagPicker();closeCreateMenu()">Tag friends</button>
+          <button class="create-menu-item" onclick="if(!isSessionMode)cpToggleSession();closeCreateMenu()">Log session</button>
+        </div>
+      </div>
       <input type="file" id="cp-file" accept="image/*,video/*" style="display:none" onchange="cpUpload(this)">
-      <button class="ct-btn" onclick="openTagPicker()"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Tag</button>
-      <button class="ct-btn" id="cp-session-btn" onclick="cpToggleSession()"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>Log Session</button>
       <button class="ct-btn ct-submit" id="cp-submit" onclick="cpPost()" disabled>Post</button>
     </div>
     <div class="sf" id="cp-sf">
@@ -382,8 +406,9 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <div class="container" style="padding-top:14px">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div><div style="font-weight:800;font-size:1.5rem;letter-spacing:-.01em">Training Log</div><div style="font-size:.72rem;color:var(--tx3)">Your personal diary</div></div>
-    <button class="btn btn-ghost btn-sm" onclick="switchView('feed');cpToggleSession()">+ Log Session</button>
+    <button class="btn btn-ghost btn-sm" onclick="toggleLogComposer()">+ Log Session</button>
   </div>
+  <div id="log-composer" class="create-box" style="display:none"></div>
   <div id="log-stats" class="grid3" style="margin-bottom:12px"></div>
   <div id="log-chart" class="chart-card" style="display:none"><div class="chart-label">Sessions This Month</div><canvas id="log-canvas" height="150"></canvas></div>
   <div id="log-list"></div>
@@ -399,24 +424,26 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 </div>
 </div>
 
-<!-- ═══ FRIENDS ═══ -->
-<div id="view-friends" class="view">
-<div class="container" style="padding-top:14px">
-  <div style="font-weight:800;font-size:1.5rem;letter-spacing:-.01em;margin-bottom:10px">Friends</div>
-  <div class="top-search" style="margin-bottom:12px;position:relative">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="friend-search" placeholder="Search people to add..." oninput="debounceSearch(this.value)">
-  </div>
-  <div id="search-results"></div>
-  <div id="pending-section"></div>
-  <div id="friends-list"></div>
-</div>
-</div>
-
 <!-- ═══ PROFILE ═══ -->
 <div id="view-profile" class="view">
 <div class="container" style="padding-top:4px">
   <div id="profile-content"></div>
+</div>
+</div>
+<!-- ═══ MESSAGES ═══ -->
+<div id="view-messages" class="view">
+<div class="container" style="padding-top:14px">
+  <div style="font-weight:800;font-size:1.5rem;letter-spacing:-.01em;margin-bottom:10px">Messages</div>
+  <div class="msg-layout">
+    <div id="msg-list" class="msg-list"></div>
+    <div class="msg-thread">
+      <div id="msg-items" class="msg-items"><div class="empty"><p>Select a conversation</p></div></div>
+      <div class="msg-compose">
+        <input id="msg-input" placeholder="Type message..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="btn btn-primary btn-sm" onclick="sendMsg()">Send</button>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -425,8 +452,8 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
   <button class="nav-btn active" data-view="feed" onclick="switchView('feed')"><svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Feed</button>
   <button class="nav-btn" data-view="log" onclick="switchView('log')"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>Log</button>
   <button class="nav-btn" data-view="explore" onclick="switchView('explore')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explore</button>
-  <button class="nav-btn" data-view="friends" onclick="switchView('friends')"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="nav-badge" id="badge-friends">0</span>Friends</button>
-  <button class="nav-btn" data-view="profile" onclick="switchView('profile');loadMyProfile()"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me</button>
+  <button class="nav-btn" data-view="messages" onclick="switchView('messages')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-badge" id="badge-messages">0</span>Messages</button>
+  <button class="nav-btn" data-view="profile" onclick="switchView('profile');loadMyProfile()"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nav-badge" id="badge-friends">0</span>Me</button>
 </nav>
 </div>
 </div>
@@ -438,7 +465,7 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 const API='';let TOKEN=localStorage.getItem('rb_token')||'';let ME=null;
 let allTechs=[],cpTechs=[],cpSubs=[],cpTagged=[];
 let cpMediaUrl='',cpMediaType='',isSessionMode=false;
-let sessionChart=null,searchTimeout=null;
+let sessionChart=null,searchTimeout=null,activeThreadUserId='',lastNotifCount=0,lastFeedRefreshAt=0;
 let feedOff=0,feedMore=true,expOff=0,expMore=true;
 let editingPostId=null;
 
@@ -460,13 +487,13 @@ applyTheme(localStorage.getItem('rb_theme')||'dark');
 function showAuthTab(t){document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(t==='login'?0:1)===i));document.getElementById('login-form').classList.toggle('active',t==='login');document.getElementById('register-form').classList.toggle('active',t==='register');document.getElementById('auth-error').style.display='none'}
 function showAuthErr(m){const e=document.getElementById('auth-error');e.textContent=m;e.style.display='block'}
 async function doLogin(e){e.preventDefault();const f=new FormData(e.target);try{const r=await api('/api/auth/login',{method:'POST',body:{login:f.get('login'),password:f.get('password')}});TOKEN=r.token;localStorage.setItem('rb_token',TOKEN);await initApp()}catch(e){showAuthErr(e.message)}return false}
-async function doRegister(e){e.preventDefault();const f=new FormData(e.target);try{const r=await api('/api/auth/register',{method:'POST',body:{username:f.get('username'),email:f.get('email'),password:f.get('password'),display_name:f.get('display_name')}});TOKEN=r.token;localStorage.setItem('rb_token',TOKEN);await initApp()}catch(e){showAuthErr(e.message)}return false}
+async function doRegister(e){e.preventDefault();const f=new FormData(e.target);try{const r=await api('/api/auth/register',{method:'POST',body:{username:f.get('username'),email:f.get('email'),password:f.get('password'),display_name:f.get('display_name'),belt:f.get('belt'),gym:f.get('gym'),bio:f.get('bio')}});TOKEN=r.token;localStorage.setItem('rb_token',TOKEN);await initApp()}catch(e){showAuthErr(e.message)}return false}
 function logout(){api('/api/auth/logout',{method:'POST'}).catch(()=>{});TOKEN='';ME=null;localStorage.removeItem('rb_token');feedOff=0;document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none';document.getElementById('feed-list').innerHTML=''}
 
 // ═══ INIT ═══
-async function initApp(){try{ME=await api('/api/auth/me');if(ME.theme)applyTheme(ME.theme);document.getElementById('auth-screen').style.display='none';document.getElementById('main-app').style.display='';const a=document.getElementById('feed-av');if(ME.avatar_url)a.innerHTML=`<img src="${ME.avatar_url}">`;else a.textContent=(ME.display_name||ME.username||'?')[0].toUpperCase();allTechs=await api('/api/techniques');populateSelects();loadFeed(true);pollBadges()}catch(e){TOKEN='';localStorage.removeItem('rb_token');document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}}
+async function initApp(){try{ME=await api('/api/auth/me');if(ME.theme)applyTheme(ME.theme);document.getElementById('auth-screen').style.display='none';document.getElementById('main-app').style.display='';const a=document.getElementById('feed-av');if(ME.avatar_url)a.innerHTML=`<img src="${ME.avatar_url}">`;else a.textContent=(ME.display_name||ME.username||'?')[0].toUpperCase();allTechs=await api('/api/techniques');populateSelects();loadFeed(true);pollBadges();initLogComposer()}catch(e){TOKEN='';localStorage.removeItem('rb_token');document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}}
 
-function switchView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===n));if(n==='friends'){loadFriends();loadPending()}if(n==='log')loadLog();if(n==='explore')loadExplore(true)}
+function switchView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===n));if(n==='log')loadLog();if(n==='explore')loadExplore(true);if(n==='messages')loadConversations()}
 
 // ═══ GLOBAL SEARCH ═══
 let gsTimeout;
@@ -476,11 +503,13 @@ if(!html)html='<div style="padding:.6rem;color:var(--tx3);font-size:.8rem">No re
 
 // ═══ NOTIFICATIONS (dropdown) ═══
 function toggleNotifDropdown(){const dd=document.getElementById('notif-dd');dd.classList.toggle('open');if(dd.classList.contains('open'))loadNotifDD()}
-async function loadNotifDD(){const ns=await api('/api/notifications');const el=document.getElementById('notif-dd-list');if(!ns.length){el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--tx3);font-size:.82rem">No notifications yet</div>';return}el.innerHTML=ns.slice(0,15).map(n=>{const from=n.from_display_name||n.from_username||'Someone';let text='';switch(n.type){case'like':text=`<strong>${esc(from)}</strong> liked your post`;break;case'comment':text=`<strong>${esc(from)}</strong> commented on your post`;break;case'comment_like':text=`<strong>${esc(from)}</strong> liked your comment`;break;case'friend_request':text=`<strong>${esc(from)}</strong> wants to be your friend`;break;case'friend_accept':text=`<strong>${esc(from)}</strong> accepted your request`;break;case'tag':text=`<strong>${esc(from)}</strong> tagged you`;break;default:text=`<strong>${esc(from)}</strong> interacted`}return`<div class="notif-item ${n.is_read?'':'unread'}" onclick="handleNotifClick('${n.type}','${n.from_user_id||''}');toggleNotifDropdown()">${n.from_avatar_url?`<div class="av av-s"><img src="${n.from_avatar_url}"></div>`:`<div class="av av-s">${(from[0]||'?').toUpperCase()}</div>`}<div class="notif-text">${text}<div class="notif-time">${timeAgo(n.created_at)}</div></div></div>`}).join('');markAllRead()}
-function handleNotifClick(type,fromId){if(type==='friend_request')switchView('friends');else if(fromId)viewProfile(fromId);else switchView('feed')}
+async function loadNotifDD(){const ns=await api('/api/notifications');const el=document.getElementById('notif-dd-list');if(!ns.length){el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--tx3);font-size:.82rem">No notifications yet</div>';return}el.innerHTML=ns.slice(0,15).map(n=>{const from=n.from_display_name||n.from_username||'Someone';let text='';switch(n.type){case'like':text=`<strong>${esc(from)}</strong> liked your post`;break;case'comment':text=`<strong>${esc(from)}</strong> commented: ${esc(n.preview||'tap to view')}`;break;case'mention':text=`<strong>${esc(from)}</strong> mentioned you`;break;case'message':text=`<strong>${esc(from)}</strong> sent you a message`;break;case'comment_like':text=`<strong>${esc(from)}</strong> liked your comment`;break;case'friend_request':text=`<strong>${esc(from)}</strong> wants to be your friend`;break;case'friend_accept':text=`<strong>${esc(from)}</strong> accepted your request`;break;case'tag':text=`<strong>${esc(from)}</strong> tagged you`;break;default:text=`<strong>${esc(from)}</strong> interacted`}return`<div class="notif-item ${n.is_read?'':'unread'}" onclick="handleNotifClick('${n.type}','${n.reference_id||''}','${n.from_user_id||''}');toggleNotifDropdown()">${n.from_avatar_url?`<div class="av av-s"><img src="${n.from_avatar_url}"></div>`:`<div class="av av-s">${(from[0]||'?').toUpperCase()}</div>`}<div class="notif-text">${text}<div class="notif-time">${timeAgo(n.created_at)}</div></div></div>`}).join('');markAllRead()}
+function handleNotifClick(type,refId,fromId){if(type==='friend_request'){switchView('profile');loadMyProfile().then(()=>setTimeout(()=>loadProfFriends(),180));return}if(type==='message'&&fromId){switchView('messages');openThread(fromId);return}if(refId){openPostFromNotif(refId);return}if(fromId)viewProfile(fromId);else switchView('feed')}
+function openPostFromNotif(postId){switchView('feed');loadFeed(true).then(()=>setTimeout(()=>{const e=document.getElementById('post-'+postId);if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},350))}
 async function markAllRead(){await api('/api/notifications/mark-read',{method:'POST'});document.getElementById('notif-badge-top').classList.remove('show')}
-async function pollBadges(){try{const r=await api('/api/notifications/unread-count');const b=document.getElementById('notif-badge-top');if(r.count>0){b.textContent=r.count;b.classList.add('show')}else b.classList.remove('show');const p=await api('/api/friends/pending');const fb=document.getElementById('badge-friends');if(p.length){fb.textContent=p.length;fb.classList.add('show')}else fb.classList.remove('show')}catch(e){}}
+async function pollBadges(){try{const r=await api('/api/notifications/unread-count');const b=document.getElementById('notif-badge-top');if(r.count>0){b.textContent=r.count;b.classList.add('show')}else b.classList.remove('show');if(r.count>lastNotifCount&&lastNotifCount>0)toast('New notification 🔔');lastNotifCount=r.count;const p=await api('/api/friends/pending');const fb=document.getElementById('badge-friends');if(p.length){fb.textContent=p.length;fb.classList.add('show')}else fb.classList.remove('show');if(document.getElementById('notif-dd').classList.contains('open'))loadNotifDD();const convs=await api('/api/messages/conversations');const unreadConvs=convs.filter(c=>c.unread_count>0).length;const mb=document.getElementById('badge-messages');if(unreadConvs){mb.textContent=unreadConvs;mb.classList.add('show')}else mb.classList.remove('show')}catch(e){}}
 setInterval(()=>{if(TOKEN&&ME)pollBadges()},25000);
+setInterval(()=>{if(TOKEN&&ME&&document.getElementById('view-feed').classList.contains('active')){const now=Date.now();if(now-lastFeedRefreshAt>15000){loadFeed(true);lastFeedRefreshAt=now}}},20000);
 document.addEventListener('click',e=>{if(!e.target.closest('#notif-bell')&&!e.target.closest('.notif-dropdown'))document.getElementById('notif-dd').classList.remove('open')});
 
 // ═══ FEED ═══
@@ -527,7 +556,7 @@ async function saveEdit(id,isSess){const body={content:document.getElementById('
 
 // COMMENTS
 async function loadCmts(postId){const sec=document.getElementById('cmts-'+postId);const cmts=await api(`/api/posts/${postId}/comments`);const inputRow=sec.querySelector('.cmt-input-row');const inputHTML=inputRow?inputRow.outerHTML:`<div class="cmt-input-row"><input id="ci-${postId}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')postCmt('${postId}')"><button onclick="postCmt('${postId}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>`;
-sec.innerHTML=cmts.map(c=>`<div class="cmt"><div>${av(c,'av-s')}</div><div class="cmt-body"><div class="cmt-bubble"><span class="cmt-author" onclick="viewProfile('${c.user_id}')">${esc(c.display_name||c.username)}</span> <span class="cmt-text">${esc(c.content)}</span></div><div class="cmt-row"><span class="cmt-time">${timeAgo(c.created_at)}</span><button class="cmt-like-btn${c.user_liked?' liked':''}" onclick="likeCmt('${c.id}',this)">♥ ${c.like_count||''}</button></div></div></div>`).join('')+inputHTML}
+sec.innerHTML=cmts.map(c=>`<div class="cmt"><div>${av(c,'av-s')}</div><div class="cmt-body"><div class="cmt-bubble"><span class="cmt-author" onclick="viewProfile('${c.user_id}')">${esc(c.display_name||c.username)}</span> <span class="cmt-text">${renderMentions(c.content)}</span></div><div class="cmt-row"><span class="cmt-time">${timeAgo(c.created_at)}</span><button class="cmt-like-btn${c.user_liked?' liked':''}" onclick="likeCmt('${c.id}',this)">♥ ${c.like_count||''}</button></div></div></div>`).join('')+inputHTML}
 function focusCmt(id){document.getElementById('ci-'+id)?.focus()}
 async function postCmt(postId){const i=document.getElementById('ci-'+postId);const c=i.value.trim();if(!c)return;try{await api(`/api/posts/${postId}/comments`,{method:'POST',body:{content:c}});i.value='';loadCmts(postId);const cc=document.getElementById('cc-'+postId);if(cc)cc.textContent=parseInt(cc.textContent)+1}catch(e){toast(e.message,true)}}
 async function likeCmt(cmtId,btn){try{const r=await api(`/api/comments/${cmtId}/like`,{method:'POST'});btn.classList.toggle('liked',r.liked);btn.innerHTML='♥ '+(parseInt(btn.textContent.replace('♥','').trim()||0)+(r.liked?1:-1)||'')}catch(e){}}
@@ -538,6 +567,9 @@ function cpToggleSession(){isSessionMode=!isSessionMode;document.getElementById(
 function cpUpdate(){document.getElementById('cp-submit').disabled=!(document.getElementById('cp-text').value.trim()||cpMediaUrl||isSessionMode)}
 async function cpUpload(inp){if(!inp.files[0])return;try{const r=await upload('/api/posts/upload',inp.files[0]);cpMediaUrl=r.url;cpMediaType=r.type;const p=document.getElementById('cp-media');p.style.display='block';p.innerHTML=(r.type==='video'?`<video src="${r.url}" style="max-height:110px;border-radius:8px" controls></video>`:`<img src="${r.url}">`)+`<button class="media-rm" onclick="cpRmMedia()">×</button>`;cpUpdate()}catch(e){toast('Upload failed',true)}inp.value=''}
 function cpRmMedia(){cpMediaUrl='';cpMediaType='';const p=document.getElementById('cp-media');p.style.display='none';p.innerHTML='';cpUpdate()}
+function toggleCreateMenu(e){e.stopPropagation();document.getElementById('cp-menu-dd').classList.toggle('open')}
+function closeCreateMenu(){document.getElementById('cp-menu-dd').classList.remove('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('.create-menu'))closeCreateMenu()})
 async function cpPost(){const content=document.getElementById('cp-text').value.trim();const tags=cpTagged.map(u=>'@'+u.username).join(' ');const full=content+(tags?(content?'\n':'')+tags:'');const body={content:full,tagged_users:cpTagged.map(u=>u.id),is_public:1};
 if(cpMediaType==='video')body.video_url=cpMediaUrl;else if(cpMediaUrl)body.image_url=cpMediaUrl;
 if(isSessionMode){body.feeling=document.getElementById('sf-feel').value.trim();body.is_session=true;body.session_date=document.getElementById('sf-date').value;body.session_duration=parseInt(document.getElementById('sf-dur').value)||0;body.session_sparring=parseInt(document.getElementById('sf-spar').value)||0;body.session_drills=parseInt(document.getElementById('sf-drill').value)||0;body.session_notes=document.getElementById('sf-notes').value;body.session_techniques=cpTechs;body.session_submissions=cpSubs;body.is_public=document.getElementById('sf-public').checked?1:0;if(!body.session_date||!body.session_duration){toast('Date & duration required',true);return}if(cpMediaUrl&&cpMediaType!=='video')body.image_url=cpMediaUrl}
@@ -581,29 +613,28 @@ ${s.image_url?`<img src="${s.image_url}" style="width:100%;border-radius:10px;ma
 </div>`)})}
 
 // ═══ EXPLORE ═══
-async function loadExplore(reset){if(reset){expOff=0;expMore=true;document.getElementById('explore-grid').innerHTML=''}const items=await api(`/api/explore?offset=${expOff}`);const el=document.getElementById('explore-grid');items.forEach(p=>{let inner='';if(p.image_url)inner=`<img src="${p.image_url}"><div class="et-overlay">♥ ${p.like_count} 💬 ${p.comment_count}</div>`;else if(p.video_url)inner=`<video src="${p.video_url}" muted></video><div class="et-overlay">♥ ${p.like_count} 💬 ${p.comment_count}</div>`;else if(p.is_session)inner=`<div class="et-session"><div class="emoji">🥋</div><div class="dur">${p.session_duration||0}min</div><div class="usr">@${p.username}</div></div>`;el.insertAdjacentHTML('beforeend',`<div class="explore-tile" onclick="viewExploreItem('${p.id}')">${inner}</div>`)});expOff+=items.length;expMore=items.length>=30;document.getElementById('explore-more').style.display=expMore?'block':'none'}
+async function loadExplore(reset){if(reset){expOff=0;expMore=true;document.getElementById('explore-grid').innerHTML=''}const items=await api(`/api/explore?offset=${expOff}`);const el=document.getElementById('explore-grid');items.forEach(p=>{if(!p.image_url)return;const inner=`<img src="${p.image_url}"><div class="et-overlay">♥ ${p.like_count} 💬 ${p.comment_count}</div>`;el.insertAdjacentHTML('beforeend',`<div class="explore-tile" onclick="viewExploreItem('${p.id}')">${inner}</div>`)});expOff+=items.length;expMore=items.length>=30;document.getElementById('explore-more').style.display=expMore?'block':'none'}
 function loadMoreExplore(){if(expMore)loadExplore()}
 function viewExploreItem(id){switchView('feed');loadFeed(true);setTimeout(()=>{const e=document.getElementById('post-'+id);if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},400)}
 
 // ═══ FRIENDS ═══
-async function loadFriends(){const fr=await api('/api/friends');const el=document.getElementById('friends-list');if(!fr.length){el.innerHTML='<div class="empty"><p>No friends yet. Search for training partners!</p></div>';return}el.innerHTML=`<div class="section-title">Your Friends (${fr.length})</div>`+fr.map(f=>`<div class="friend-item" onclick="viewProfile('${f.id}')">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)} <span class="belt-dot ${bc(f.belt)}"></span></div><div class="fi-detail">@${f.username}${f.gym?' · '+esc(f.gym):''}</div></div></div>`).join('')}
-async function loadPending(){const p=await api('/api/friends/pending');const el=document.getElementById('pending-section');if(!p.length){el.innerHTML='';return}el.innerHTML=`<div class="section-title" style="margin-bottom:.3rem">Pending Requests</div>`+p.map(f=>`<div class="friend-item">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div><div class="fi-detail">@${f.username}</div></div><div class="fi-actions"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',true)">Accept</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',false)">Decline</button></div></div>`).join('')}
 function debounceSearch(q){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>searchFriends(q),300)}
 async function searchFriends(q){const el=document.getElementById('search-results');if(q.length<2){el.innerHTML='';return}const u=await api(`/api/users/search?q=${encodeURIComponent(q)}`);if(!u.length){el.innerHTML='<div style="color:var(--tx3);font-size:.8rem;padding:.4rem">No users found</div>';return}el.innerHTML=u.map(u=>`<div class="friend-item">${av(u,'av-s')}<div class="fi-info"><div class="fi-name">${esc(u.display_name||u.username)} <span class="belt-dot ${bc(u.belt)}"></span></div><div class="fi-detail">@${u.username}${u.gym?' · '+esc(u.gym):''}</div></div><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();sendFR('${u.id}')">+ Add</button></div>`).join('')}
 async function sendFR(id){try{await api('/api/friends/request',{method:'POST',body:{user_id:id}});toast('Request sent! 🤝')}catch(e){toast(e.message,true)}}
-async function respondFR(fId,accept){try{await api('/api/friends/respond',{method:'POST',body:{friendship_id:fId,accept}});toast(accept?'Friend added! 🤙':'Declined');loadPending();loadFriends();pollBadges()}catch(e){toast(e.message,true)}}
+async function respondFR(fId,accept){try{await api('/api/friends/respond',{method:'POST',body:{friendship_id:fId,accept}});toast(accept?'Friend added! 🤙':'Declined');pollBadges();if(document.getElementById('view-profile').classList.contains('active'))loadProfFriends()}catch(e){toast(e.message,true)}}
 
 // ═══ PROFILE ═══
-function loadMyProfile(){viewProfile(ME.id)}
+function loadMyProfile(){return viewProfile(ME.id)}
 async function viewProfile(userId){switchView('profile');const el=document.getElementById('profile-content');el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--tx3)">Loading...</div>';
 const p=await api(`/api/profile/${userId}`);const isSelf=p.is_self;const belt=p.belt||'white';const dots='●'.repeat(p.stripes||0)+'○'.repeat(4-(p.stripes||0));
 let fBtn='';if(!isSelf&&p.friendship){const fs=p.friendship;if(fs.status==='none')fBtn=`<button class="btn btn-primary btn-sm" onclick="sendFR('${userId}')">+ Add Friend</button>`;else if(fs.status==='pending'&&fs.is_receiver)fBtn=`<button class="btn btn-success btn-sm" onclick="respondFR('${fs.friendship_id}',true)">Accept Request</button>`;else if(fs.status==='pending')fBtn=`<button class="btn btn-ghost btn-sm" disabled>Pending</button>`;else if(fs.status==='accepted')fBtn=`<button class="btn btn-danger btn-sm" onclick="if(confirm('Remove friend?'))api('/api/friends/${userId}',{method:'DELETE'}).then(()=>{toast('Removed');viewProfile('${userId}')})">Remove</button>`}
 el.innerHTML=`<div class="profile-card">${isSelf?`<button class="btn btn-ghost btn-sm edit-btn" onclick="openEditProfile()">✎ Edit</button>`:''}<div style="display:flex;justify-content:center">${av(p,'av-xl')}</div><div class="profile-name">${esc(p.display_name||p.username)}</div><div class="profile-handle">@${p.username}</div>${p.bio?`<div class="profile-bio">${esc(p.bio)}</div>`:''}<div class="profile-belt"><span class="belt-dot ${bc(belt)}"></span><span style="font-size:.85rem;font-weight:600;text-transform:capitalize">${belt}</span><span style="font-size:.7rem;color:var(--tx3);font-family:'JetBrains Mono',monospace;letter-spacing:2px">${dots}</span></div>${p.gym?`<div style="font-size:.78rem;color:var(--tx3);margin-top:.2rem">📍 ${esc(p.gym)}</div>`:''}<div class="profile-stats"><div class="ps-stat"><div class="ps-stat-v">${p.post_count||0}</div><div class="ps-stat-l">Posts</div></div><div class="ps-stat"><div class="ps-stat-v">${p.total_hours||0}</div><div class="ps-stat-l">Hours</div></div><div class="ps-stat"><div class="ps-stat-v">${p.friend_count||0}</div><div class="ps-stat-l">Friends</div></div></div>${fBtn?`<div class="profile-actions">${fBtn}</div>`:''}</div><div class="profile-tabs"><button class="profile-tab active" onclick="loadProfPosts('${userId}',this)">Posts</button><button class="profile-tab" onclick="loadProfSessions('${userId}',this)">Sessions</button>${isSelf?`<button class="profile-tab" onclick="loadProfFriends(this)">Friends</button>`:''}</div><div id="prof-tab"></div>`;
 if(isSelf){el.querySelector('.profile-card').insertAdjacentHTML('beforeend',`<div class="profile-actions" style="margin-top:.3rem"><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>`)}
 loadProfPosts(userId)}
-async function loadProfPosts(uid,btn){if(btn)document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'))&&btn.classList.add('active');const posts=await api(`/api/posts/user/${uid}`);const el=document.getElementById('prof-tab');el.innerHTML=posts.length?posts.map(p=>renderPost(p)).join(''):'<div class="empty"><p>No posts yet</p></div>';posts.forEach(p=>loadCmts(p.id))}
-async function loadProfSessions(uid,btn){if(btn)document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'))&&btn.classList.add('active');const s=await api(`/api/sessions?user_id=${uid}`);document.getElementById('prof-tab').innerHTML=s.length?s.map(x=>`<div class="log-item"><div class="log-date">${x.session_date}</div><div class="log-info"><div class="log-title">${x.session_duration}min · ${x.session_sparring||0} rnds</div><div class="log-detail">${esc(x.feeling||(x.session_techniques||[]).slice(0,3).join(', ')||'No details')}</div></div></div>`).join(''):'<div class="empty"><p>No public sessions</p></div>'}
-function loadProfFriends(btn){if(btn)document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'))&&btn.classList.add('active');api('/api/friends').then(fr=>{document.getElementById('prof-tab').innerHTML=fr.length?fr.map(f=>`<div class="friend-item" onclick="viewProfile('${f.id}')">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div><div class="fi-detail">@${f.username}</div></div></div>`).join(''):'<div class="empty"><p>No friends yet</p></div>'})}
+function activateProfileTab(btn){document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));if(btn)btn.classList.add('active')}
+async function loadProfPosts(uid,btn){activateProfileTab(btn);const posts=await api(`/api/posts/user/${uid}`);const el=document.getElementById('prof-tab');el.innerHTML=posts.length?posts.map(p=>renderPost(p)).join(''):'<div class="empty"><p>No posts yet</p></div>';posts.forEach(p=>loadCmts(p.id))}
+async function loadProfSessions(uid,btn){activateProfileTab(btn);const s=await api(`/api/sessions?user_id=${uid}`);document.getElementById('prof-tab').innerHTML=s.length?s.map(x=>`<div class="log-item"><div class="log-date">${x.session_date}</div><div class="log-info"><div class="log-title">${x.session_duration}min · ${x.session_sparring||0} rnds</div><div class="log-detail">${esc(x.feeling||(x.session_techniques||[]).slice(0,3).join(', ')||'No details')}</div></div></div>`).join(''):'<div class="empty"><p>No public sessions</p></div>'}
+async function loadProfFriends(btn){activateProfileTab(btn);const fr=await api('/api/friends');const p=await api('/api/friends/pending');document.getElementById('prof-tab').innerHTML=`<div class="top-search" style="margin-bottom:12px;position:relative"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="friend-search" placeholder="Search people to add..." oninput="debounceSearch(this.value)"></div><div id="search-results"></div>${p.length?`<div class="section-title" style="margin-bottom:.3rem">Pending Requests</div>${p.map(f=>`<div class="friend-item">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div><div class="fi-detail">@${f.username}</div></div><div class="fi-actions"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',true)">Accept</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',false)">Decline</button></div></div>`).join('')}`:''}${fr.length?`<div class="section-title">Your Friends (${fr.length})</div>${fr.map(f=>`<div class="friend-item" onclick="viewProfile('${f.id}')">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div><div class="fi-detail">@${f.username}${f.gym?' · '+esc(f.gym):''}</div></div></div>`).join('')}`:'<div class="empty"><p>No friends yet</p></div>'}`}
 
 function openEditProfile(){openModal('Edit Profile',`
 <div class="field"><label>Display Name</label><input id="ep-name" value="${esc(ME.display_name||'')}"></div>
@@ -616,6 +647,15 @@ function openEditProfile(){openModal('Edit Profile',`
 <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>`)}
 async function saveProfile(){const af=document.getElementById('ep-av-file').files[0];if(af){try{const r=await upload('/api/profile/avatar',af);ME.avatar_url=r.url}catch(e){}}const d={display_name:document.getElementById('ep-name').value,bio:document.getElementById('ep-bio').value,gym:document.getElementById('ep-gym').value,belt:document.getElementById('ep-belt').value,stripes:parseInt(document.getElementById('ep-stripes').value),start_date:document.getElementById('ep-start').value,profile_public:document.getElementById('ep-pub').checked?1:0};await api('/api/profile',{method:'PUT',body:d});Object.assign(ME,d);closeModal();toast('Profile updated! 🤙');viewProfile(ME.id);const a=document.getElementById('feed-av');if(ME.avatar_url)a.innerHTML=`<img src="${ME.avatar_url}">`;else a.textContent=(ME.display_name||ME.username||'?')[0].toUpperCase()}
 async function findUser(username){const r=await api(`/api/users/search?q=${encodeURIComponent(username)}`);const u=r.find(x=>x.username.toLowerCase()===username.toLowerCase());if(u)viewProfile(u.id);else toast('User not found',true)}
+
+// MESSAGES
+async function loadConversations(){const convs=await api('/api/messages/conversations');const el=document.getElementById('msg-list');if(!convs.length){el.innerHTML='<div class="empty"><p>No messages yet</p></div>';return}el.innerHTML=convs.map(c=>`<div class="friend-item" onclick="openThread('${c.id}')">${av(c,'av-s')}<div class="fi-info"><div class="fi-name">${esc(c.display_name||c.username)}</div><div class="fi-detail">${esc((c.last_message||'').slice(0,28))}</div></div></div>`).join('')}
+async function openThread(userId){activeThreadUserId=userId;const msgs=await api(`/api/messages/thread/${userId}`);const el=document.getElementById('msg-items');el.innerHTML=msgs.length?msgs.map(m=>`<div class="msg-bubble ${m.from_user_id===ME.id?'me':'other'}">${renderMentions(m.content)}</div>`).join(''):'<div class="empty"><p>Say hi 👋</p></div>';el.scrollTop=el.scrollHeight}
+async function sendMsg(){if(!activeThreadUserId){toast('Open a conversation first',true);return}const i=document.getElementById('msg-input');const c=i.value.trim();if(!c)return;await api(`/api/messages/${activeThreadUserId}`,{method:'POST',body:{content:c}});i.value='';openThread(activeThreadUserId);loadConversations()}
+
+// LOG composer
+function initLogComposer(){document.getElementById('log-composer').innerHTML=`<div style="font-size:.82rem;color:var(--tx2);margin-bottom:.45rem">Quick log actions</div><div class="create-tools"><button class="ct-btn" onclick="switchView('feed');if(!isSessionMode)cpToggleSession()">Open session form</button><button class="ct-btn" onclick="switchView('feed');document.getElementById('cp-file').click()">Add photo/video</button><button class="ct-btn" onclick="switchView('feed');openTagPicker()">Tag friends</button></div>`}
+function toggleLogComposer(){const el=document.getElementById('log-composer');el.style.display=el.style.display==='none'?'block':'none'}
 
 // ═══ MODAL ═══
 function openModal(t,h){document.getElementById('modal-inner').innerHTML=`<div class="modal-title">${t}</div>${h}`;document.getElementById('modal-bg').classList.add('open')}

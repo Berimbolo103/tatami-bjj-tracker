@@ -26,7 +26,7 @@ th{color:var(--tx3);font-family:var(--m);font-size:.65rem;text-transform:upperca
 </head>
 <body>
 <div id="login-box"><h1>Roll<span>book</span></h1><div class="sub">admin panel</div><div class="field"><label>Admin Token</label><input type="password" id="tok"></div><button class="btn" onclick="login()">Enter</button></div>
-<div id="panel" style="display:none"><h1>Roll<span>book</span> Admin</h1><div class="sub">dashboard</div><div class="grid" id="stats"></div><h2 style="font-weight:700;font-size:1.1rem;color:var(--gold);margin-bottom:.4rem">Pending Submissions</h2><div id="subs"></div><h2 style="font-weight:700;font-size:1.1rem;color:var(--gold);margin:1rem 0 .4rem">All Techniques</h2><div id="techs" style="max-height:400px;overflow-y:auto"></div></div>
+<div id="panel" style="display:none"><h1>Roll<span>book</span> Admin</h1><div class="sub">dashboard</div><div class="grid" id="stats"></div><div class="card"><h2 style="font-weight:700;font-size:1rem;color:var(--gold);margin-bottom:.5rem">Add Submission / Position</h2><div class="field"><label>Name</label><input id="new-name"></div><div class="field"><label>Category</label><input id="new-cat" placeholder="submission or control/position"></div><div class="field"><label>Description</label><input id="new-desc"></div><button class="btn btn-a" onclick="addTech()">Add</button></div><h2 style="font-weight:700;font-size:1.1rem;color:var(--gold);margin-bottom:.4rem">Pending Submissions</h2><div id="subs"></div><h2 style="font-weight:700;font-size:1.1rem;color:var(--gold);margin:1rem 0 .4rem">All Techniques</h2><div id="techs" style="max-height:400px;overflow-y:auto"></div></div>
 <script>
 let AT='';const A='';
 async function aa(p,o={}){const h={'Content-Type':'application/json','x-admin-token':AT};return(await fetch(A+p,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined})).json()}
@@ -35,4 +35,5 @@ async function load(){const s=await aa('/api/admin/stats');document.getElementBy
 async function apr(id){await aa(`/api/admin/submissions/${id}/approve`,{method:'PUT'});load()}
 async function rej(id){const r=prompt('Reason:');await aa(`/api/admin/submissions/${id}/reject`,{method:'PUT',body:{reason:r||''}});load()}
 async function del(id){if(!confirm('Delete?'))return;await aa(`/api/admin/techniques/${id}`,{method:'DELETE'});load()}
+async function addTech(){const name=document.getElementById('new-name').value.trim(),category=document.getElementById('new-cat').value.trim(),description=document.getElementById('new-desc').value.trim();if(!name||!category)return alert('Name and category required');const r=await aa('/api/admin/techniques',{method:'POST',body:{name,category,description}});if(r.error)return alert(r.error);document.getElementById('new-name').value='';document.getElementById('new-cat').value='';document.getElementById('new-desc').value='';load()}
 </script></body></html>
