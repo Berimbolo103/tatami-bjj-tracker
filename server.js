@@ -3,7 +3,7 @@ const express = require('express'), path = require('path'), multer = require('mu
 const db = require('./database/db');
 const app = express();
 const PORT = process.env.PORT || 3000, ENV = process.env.NODE_ENV || 'development';
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'rollbook-admin-2024';
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'tatami-admin-2024';
 const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -44,12 +44,12 @@ app.get('/api/health', (req,res) => res.json({ status:'ok', env:ENV, app:'Rollbo
 
 // AUTH
 app.post('/api/auth/register', (req,res) => {
-  const {username,email,password,display_name}=req.body;
+  const {username,email,password,display_name,belt,gym,bio}=req.body;
   if(!username||!email||!password) return res.status(400).json({error:'Username, email, and password required'});
   if(username.length<3) return res.status(400).json({error:'Username must be at least 3 characters'});
   if(password.length<6) return res.status(400).json({error:'Password must be at least 6 characters'});
   if(!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({error:'Username: letters, numbers, underscore only'});
-  const r=db.registerUser({username,email,password,display_name}); if(r.error) return res.status(409).json(r); res.json(r);
+  const r=db.registerUser({username,email,password,display_name,belt,gym,bio}); if(r.error) return res.status(409).json(r); res.json(r);
 });
 app.post('/api/auth/login', (req,res) => {
   const {login,password}=req.body; if(!login||!password) return res.status(400).json({error:'Required'});
@@ -105,6 +105,16 @@ app.get('/api/notifications', auth, (req,res) => res.json(db.getNotifications(re
 app.get('/api/notifications/unread-count', auth, (req,res) => res.json({ count: db.getUnreadCount(req.user.id) }));
 app.post('/api/notifications/mark-read', auth, (req,res) => { db.markNotificationsRead(req.user.id); res.json({ok:true}); });
 
+// MESSAGES
+app.get('/api/messages/conversations', auth, (req,res) => res.json(db.getConversations(req.user.id)));
+app.get('/api/messages/thread/:userId', auth, (req,res) => res.json(db.getThread(req.user.id, req.params.userId, parseInt(req.query.offset)||0)));
+app.post('/api/messages/:userId', auth, (req,res) => {
+  if(!req.body.content?.trim()) return res.status(400).json({error:'Message required'});
+  const r=db.sendMessage(req.user.id, req.params.userId, req.body.content.trim());
+  if(r.error) return res.status(400).json(r);
+  res.json(r);
+});
+
 // TECHNIQUES
 app.get('/api/techniques', (req,res) => res.json(db.getApprovedTechniques()));
 app.post('/api/techniques/submit', auth, (req,res) => {
@@ -119,6 +129,14 @@ app.get('/api/admin/techniques', requireAdmin, (req,res) => res.json(db.getAllTe
 app.put('/api/admin/submissions/:id/approve', requireAdmin, (req,res) => { db.approveSubmission(req.params.id); res.json({ok:true}); });
 app.put('/api/admin/submissions/:id/reject', requireAdmin, (req,res) => { db.rejectSubmission(req.params.id,req.body.reason||''); res.json({ok:true}); });
 app.delete('/api/admin/techniques/:id', requireAdmin, (req,res) => { db.deleteTechnique(req.params.id); res.json({ok:true}); });
+app.post('/api/admin/techniques', requireAdmin, (req,res) => {
+  const { name, category, description } = req.body;
+  if(!name||!category) return res.status(400).json({error:'Name and category required'});
+  const r = db.submitTechnique({ name, category, description, submitted_by: 'admin' });
+  if(r.alreadyExists) return res.status(409).json({error:'Technique already exists'});
+  db.approveSubmission(r.id);
+  res.json({ok:true,id:r.id});
+});
 
 app.get('*', (req,res) => res.sendFile(path.join(__dirname,'public','index.html')));
 app.listen(PORT, () => console.log(`\n  🥋 Rollbook — ${ENV} — http://localhost:${PORT}\n`));
