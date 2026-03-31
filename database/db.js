@@ -18,6 +18,7 @@ db.exec(`
     gym TEXT DEFAULT '', belt TEXT DEFAULT 'white', stripes INTEGER DEFAULT 0,
     start_date TEXT DEFAULT '', height TEXT DEFAULT '', weight TEXT DEFAULT '',
     profile_public INTEGER DEFAULT 1, theme TEXT DEFAULT 'dark',
+    onboarded INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS tokens (
@@ -62,15 +63,19 @@ db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_techniques_name_lower ON techniques(LOWER(name));
   CREATE TABLE IF NOT EXISTS notifications (
     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, from_user_id TEXT,
-    type TEXT NOT NULL, reference_id TEXT, is_read INTEGER DEFAULT 0,
-    created_at TEXT DEFAULT (datetime('now'))
+    type TEXT NOT NULL, reference_id TEXT, preview TEXT DEFAULT '',
+    is_read INTEGER DEFAULT 0, created_at TEXT DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS messages (
-    id TEXT PRIMARY KEY, from_user_id TEXT NOT NULL, to_user_id TEXT NOT NULL,
+    id TEXT PRIMARY KEY, sender_id TEXT NOT NULL, receiver_id TEXT NOT NULL,
     content TEXT NOT NULL, is_read INTEGER DEFAULT 0,
     created_at TEXT DEFAULT (datetime('now'))
   );
 `);
+
+// Add columns if missing (safe migration for existing DBs)
+try { db.exec(`ALTER TABLE notifications ADD COLUMN preview TEXT DEFAULT ''`); } catch(_){}
+try { db.exec(`ALTER TABLE users ADD COLUMN onboarded INTEGER DEFAULT 0`); } catch(_){}
 
 // Seed techniques
 const SEED=[{name:'Closed Guard',category:'guard'},{name:'Half Guard',category:'guard'},{name:'Deep Half Guard',category:'guard'},{name:'Butterfly Guard',category:'guard'},{name:'De La Riva Guard',category:'guard'},{name:'Reverse De La Riva',category:'guard'},{name:'X Guard',category:'guard'},{name:'Single Leg X',category:'guard'},{name:'Lasso Guard',category:'guard'},{name:'Spider Guard',category:'guard'},{name:'Worm Guard',category:'guard'},{name:'Rubber Guard',category:'guard'},{name:'Z Guard',category:'guard'},{name:'K Guard',category:'guard'},{name:'Torreando Pass',category:'pass'},{name:'Over Under Pass',category:'pass'},{name:'Leg Drag',category:'pass'},{name:'Headquarters',category:'pass'},{name:'Knee Slice',category:'pass'},{name:'Smash Pass',category:'pass'},{name:'Bullfighter Pass',category:'pass'},{name:'Double Under Pass',category:'pass'},{name:'X Pass',category:'pass'},{name:'Back Step',category:'pass'},{name:'Long Step',category:'pass'},{name:'Pressure Pass',category:'pass'},{name:'Triangle Choke',category:'submission'},{name:'Rear Naked Choke',category:'submission'},{name:'Armbar',category:'submission'},{name:'Kimura',category:'submission'},{name:'Guillotine',category:'submission'},{name:'Heel Hook',category:'submission'},{name:'Straight Ankle Lock',category:'submission'},{name:'Kneebar',category:'submission'},{name:'Omoplata',category:'submission'},{name:'Gogoplata',category:'submission'},{name:'Bow and Arrow',category:'submission'},{name:'Cross Collar Choke',category:'submission'},{name:'Baseball Bat Choke',category:'submission'},{name:'Darce Choke',category:'submission'},{name:'Anaconda Choke',category:'submission'},{name:'North South Choke',category:'submission'},{name:'Clock Choke',category:'submission'},{name:'Ezekiel',category:'submission'},{name:'Wristlock',category:'submission'},{name:'Calf Slicer',category:'submission'},{name:'Toe Hold',category:'submission'},{name:'Hip Bump Sweep',category:'sweep'},{name:'Scissor Sweep',category:'sweep'},{name:'Flower Sweep',category:'sweep'},{name:'Balloon Sweep',category:'sweep'},{name:'Butterfly Sweep',category:'sweep'},{name:'X Guard Sweep',category:'sweep'},{name:'Sickle Sweep',category:'sweep'},{name:'Tripod Sweep',category:'sweep'},{name:'Berimbolo',category:'sweep'},{name:'Kiss of Dragon',category:'sweep'},{name:'Lumberjack Sweep',category:'sweep'},{name:'Single Leg',category:'takedown'},{name:'Double Leg',category:'takedown'},{name:'Body Lock',category:'takedown'},{name:'Judo Hip Throw',category:'takedown'},{name:'Osoto Gari',category:'takedown'},{name:'Seoi Nage',category:'takedown'},{name:'Ankle Pick',category:'takedown'},{name:'Foot Sweep',category:'takedown'},{name:'Guard Pull',category:'takedown'},{name:'Back Control',category:'control'},{name:'Mount',category:'control'},{name:'Side Control',category:'control'},{name:'Knee on Belly',category:'control'},{name:'North South',category:'control'},{name:'Crucifix',category:'control'},{name:'Body Triangle',category:'control'},{name:'Bridge and Roll',category:'escape'},{name:'Elbow Knee Escape',category:'escape'},{name:'Guard Recovery',category:'escape'},{name:'Back Step Escape',category:'escape'},{name:'Hip Escape',category:'escape'},{name:'Granby Roll',category:'escape'}];
@@ -78,20 +83,10 @@ const ins = db.prepare(`INSERT OR IGNORE INTO techniques (name,category,status,s
 db.transaction(() => SEED.forEach(t => ins.run(t)))();
 
 // ═══ AUTH ═══
-function registerUser({ username, email, password, display_name, belt, gym, bio }) {
+function registerUser({ username, email, password, display_name }) {
   const id = uid(), { salt, hash } = hashPw(password);
   try {
-    db.prepare(`INSERT INTO users(id,username,email,password_hash,password_salt,display_name,belt,gym,bio) VALUES(?,?,?,?,?,?,?,?,?)`).run(
-      id,
-      username.trim(),
-      email.trim().toLowerCase(),
-      hash,
-      salt,
-      display_name || username,
-      belt || 'white',
-      gym || '',
-      bio || ''
-    );
+    db.prepare(`INSERT INTO users(id,username,email,password_hash,password_salt,display_name) VALUES(?,?,?,?,?,?)`).run(id, username.trim(), email.trim().toLowerCase(), hash, salt, display_name || username);
     return { id, token: createToken(id) };
   } catch (e) {
     if (e.message.includes('users.username')) return { error: 'Username already taken' };
@@ -120,7 +115,7 @@ function logoutToken(token) { db.prepare(`DELETE FROM tokens WHERE token=?`).run
 
 // ═══ PROFILE ═══
 function getPublicProfile(userId) {
-  const u = db.prepare(`SELECT id,username,display_name,bio,avatar_url,gym,belt,stripes,start_date,profile_public,theme,created_at FROM users WHERE id=?`).get(userId);
+  const u = db.prepare(`SELECT id,username,display_name,bio,avatar_url,gym,belt,stripes,start_date,profile_public,theme,onboarded,created_at FROM users WHERE id=?`).get(userId);
   if (!u) return null;
   u.session_count = db.prepare(`SELECT COUNT(*) as c FROM posts WHERE user_id=? AND is_session=1`).get(userId).c;
   u.friend_count = db.prepare(`SELECT COUNT(*) as c FROM friendships WHERE (requester_id=? OR receiver_id=?) AND status='accepted'`).get(userId, userId).c;
@@ -129,7 +124,7 @@ function getPublicProfile(userId) {
   return u;
 }
 function updateProfile(userId, data) {
-  const fields = ['display_name','bio','avatar_url','gym','belt','stripes','start_date','height','weight','profile_public','theme'];
+  const fields = ['display_name','bio','avatar_url','gym','belt','stripes','start_date','height','weight','profile_public','theme','onboarded'];
   const sets=[], vals=[];
   for (const f of fields) { if (data[f]!==undefined) { sets.push(`${f}=?`); vals.push(data[f]); } }
   if (!sets.length) return;
@@ -169,13 +164,12 @@ function getFriendIds(userId) {
   return db.prepare(`SELECT CASE WHEN f.requester_id=? THEN f.receiver_id ELSE f.requester_id END as fid FROM friendships f WHERE (f.requester_id=? OR f.receiver_id=?) AND f.status='accepted'`).all(userId, userId, userId).map(r => r.fid);
 }
 
-// ═══ POSTS (unified with sessions) ═══
+// ═══ POSTS ═══
 function createPost(userId, d) {
   const id = uid();
   db.prepare(`INSERT INTO posts(id,user_id,content,feeling,image_url,video_url,is_session,session_date,session_duration,session_drills,session_sparring,session_notes,session_techniques,session_submissions,tagged_users,is_public) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
     .run(id, userId, d.content||'', d.feeling||'', d.image_url||'', d.video_url||'', d.is_session?1:0, d.session_date||'', d.session_duration||0, d.session_drills||0, d.session_sparring||0, d.session_notes||'', JSON.stringify(d.session_techniques||[]), JSON.stringify(d.session_submissions||[]), JSON.stringify(d.tagged_users||[]), d.is_public!==undefined?(d.is_public?1:0):1);
   if (d.tagged_users?.length) { for (const tid of d.tagged_users) { if (tid !== userId) addNotification(tid, userId, 'tag', id); } }
-  notifyMentionsInText(d.content || '', userId, id);
   return id;
 }
 function updatePost(userId, postId, d) {
@@ -190,13 +184,12 @@ function getPost(postId, viewerId) {
   const r = db.prepare(`SELECT p.*, u.username, u.display_name, u.avatar_url, u.belt, u.stripes, (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count, (SELECT COUNT(*) FROM comments WHERE post_id=p.id) as comment_count, (SELECT COUNT(*) FROM likes WHERE post_id=p.id AND user_id=?) as user_liked FROM posts p JOIN users u ON u.id=p.user_id WHERE p.id=?`).get(viewerId, postId);
   return r ? parsePost(r) : null;
 }
-
 function parsePost(r) {
   if (!r) return r;
   return { ...r, session_techniques: JSON.parse(r.session_techniques||'[]'), session_submissions: JSON.parse(r.session_submissions||'[]'), tagged_users: JSON.parse(r.tagged_users||'[]'), user_liked: (r.user_liked||0) > 0 };
 }
 
-// FEED: only own posts + friends' public posts + posts user is tagged in
+// FEED: own + friends' public + tagged
 function getFeed(userId, offset = 0, limit = 10) {
   return db.prepare(`
     SELECT p.*, u.username, u.display_name, u.avatar_url, u.belt, u.stripes,
@@ -215,23 +208,20 @@ function getFeed(userId, offset = 0, limit = 10) {
     ORDER BY p.created_at DESC LIMIT ? OFFSET ?
   `).all(userId, userId, userId, userId, userId, userId, limit, offset).map(parsePost);
 }
-
 function getUserPosts(userId, viewerId, offset = 0, limit = 20) {
   const w = userId === viewerId ? '' : 'AND p.is_public=1';
   return db.prepare(`SELECT p.*, u.username, u.display_name, u.avatar_url, u.belt, u.stripes, (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count, (SELECT COUNT(*) FROM comments WHERE post_id=p.id) as comment_count, (SELECT COUNT(*) FROM likes WHERE post_id=p.id AND user_id=?) as user_liked FROM posts p JOIN users u ON u.id=p.user_id WHERE p.user_id=? ${w} ORDER BY p.created_at DESC LIMIT ? OFFSET ?`).all(viewerId, userId, limit, offset).map(parsePost);
 }
-
 function getUserSessions(userId, viewerId) {
   const w = userId === viewerId ? '' : 'AND is_public=1';
   return db.prepare(`SELECT * FROM posts WHERE user_id=? AND is_session=1 ${w} ORDER BY session_date DESC`).all(userId).map(r => ({ ...r, session_techniques: JSON.parse(r.session_techniques||'[]'), session_submissions: JSON.parse(r.session_submissions||'[]'), tagged_users: JSON.parse(r.tagged_users||'[]') }));
 }
 
-// Explore: ALL public posts (not just friends), randomized
+// Explore: ONLY images/videos, NO session-only posts, randomized
 function getExplore(offset = 0, limit = 30) {
-  return db.prepare(`SELECT p.id, p.image_url, p.created_at, u.username, u.display_name, u.avatar_url, u.belt, u.id as user_id, (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count, (SELECT COUNT(*) FROM comments WHERE post_id=p.id) as comment_count FROM posts p JOIN users u ON u.id=p.user_id WHERE p.is_public=1 AND p.image_url!='' ORDER BY p.created_at DESC LIMIT ? OFFSET ?`).all(limit, offset);
+  return db.prepare(`SELECT p.id, p.image_url, p.video_url, p.content, p.feeling, p.is_session, p.session_date, p.session_duration, p.session_sparring, p.created_at, u.username, u.display_name, u.avatar_url, u.belt, u.id as user_id, (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count, (SELECT COUNT(*) FROM comments WHERE post_id=p.id) as comment_count FROM posts p JOIN users u ON u.id=p.user_id WHERE p.is_public=1 AND (p.image_url!='' OR p.video_url!='') ORDER BY (p.id || strftime('%j','now')) LIMIT ? OFFSET ?`).all(limit, offset);
 }
 
-// Search posts by keyword
 function searchPosts(query, userId, offset = 0, limit = 20) {
   return db.prepare(`SELECT p.*, u.username, u.display_name, u.avatar_url, u.belt, u.stripes, (SELECT COUNT(*) FROM likes WHERE post_id=p.id) as like_count, (SELECT COUNT(*) FROM comments WHERE post_id=p.id) as comment_count, (SELECT COUNT(*) FROM likes WHERE post_id=p.id AND user_id=?) as user_liked FROM posts p JOIN users u ON u.id=p.user_id WHERE p.is_public=1 AND (p.content LIKE ? OR p.feeling LIKE ? OR p.session_notes LIKE ? OR u.username LIKE ? OR u.display_name LIKE ?) ORDER BY p.created_at DESC LIMIT ? OFFSET ?`).all(userId, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, `%${query}%`, limit, offset).map(parsePost);
 }
@@ -246,11 +236,23 @@ function toggleLike(userId, postId) {
   return { liked: true };
 }
 function getPostLikes(postId) { return db.prepare(`SELECT u.id,u.username,u.display_name,u.avatar_url FROM likes l JOIN users u ON u.id=l.user_id WHERE l.post_id=? ORDER BY l.created_at DESC`).all(postId); }
+
 function addComment(userId, postId, content) {
   const id = uid(); db.prepare(`INSERT INTO comments(id,user_id,post_id,content) VALUES(?,?,?,?)`).run(id, userId, postId, content);
   const post = db.prepare(`SELECT user_id FROM posts WHERE id=?`).get(postId);
-  if (post && post.user_id !== userId) addNotification(post.user_id, userId, 'comment', postId);
-  notifyMentionsInText(content, userId, postId);
+  if (post && post.user_id !== userId) addNotification(post.user_id, userId, 'comment', postId, content.slice(0,80));
+  // Handle @mentions in comment
+  const mentions = content.match(/@(\w+)/g);
+  if (mentions) {
+    const commenter = db.prepare(`SELECT username FROM users WHERE id=?`).get(userId);
+    mentions.forEach(m => {
+      const uname = m.slice(1);
+      const mentioned = db.prepare(`SELECT id FROM users WHERE username=? COLLATE NOCASE`).get(uname);
+      if (mentioned && mentioned.id !== userId && (!post || mentioned.id !== post.user_id)) {
+        addNotification(mentioned.id, userId, 'mention', postId, content.slice(0,80));
+      }
+    });
+  }
   return { id };
 }
 function getPostComments(postId, viewerId) {
@@ -261,7 +263,6 @@ function getPostComments(postId, viewerId) {
 }
 function deleteComment(userId, commentId) { db.prepare(`DELETE FROM comments WHERE id=? AND user_id=?`).run(commentId, userId); return { ok: true }; }
 
-// Comment likes
 function toggleCommentLike(userId, commentId) {
   const ex = db.prepare(`SELECT id FROM comment_likes WHERE user_id=? AND comment_id=?`).get(userId, commentId);
   if (ex) { db.prepare(`DELETE FROM comment_likes WHERE id=?`).run(ex.id); return { liked: false }; }
@@ -272,65 +273,46 @@ function toggleCommentLike(userId, commentId) {
 }
 
 // ═══ NOTIFICATIONS ═══
-function addNotification(userId, fromUserId, type, referenceId) { const id = uid(); db.prepare(`INSERT INTO notifications(id,user_id,from_user_id,type,reference_id) VALUES(?,?,?,?,?)`).run(id, userId, fromUserId, type, referenceId||''); }
-function getNotifications(userId, limit = 50) {
-  return db.prepare(`
-    SELECT n.*, u.username as from_username, u.display_name as from_display_name, u.avatar_url as from_avatar_url,
-      CASE WHEN n.type='comment' THEN (SELECT c.content FROM comments c WHERE c.post_id=n.reference_id ORDER BY c.created_at DESC LIMIT 1) ELSE '' END as preview
-    FROM notifications n
-    LEFT JOIN users u ON u.id=n.from_user_id
-    WHERE n.user_id=?
-    ORDER BY n.created_at DESC LIMIT ?
-  `).all(userId, limit);
+function addNotification(userId, fromUserId, type, referenceId, preview) {
+  const id = uid();
+  db.prepare(`INSERT INTO notifications(id,user_id,from_user_id,type,reference_id,preview) VALUES(?,?,?,?,?,?)`).run(id, userId, fromUserId, type, referenceId||'', preview||'');
 }
+function getNotifications(userId, limit = 50) { return db.prepare(`SELECT n.*, u.username as from_username, u.display_name as from_display_name, u.avatar_url as from_avatar_url FROM notifications n LEFT JOIN users u ON u.id=n.from_user_id WHERE n.user_id=? ORDER BY n.created_at DESC LIMIT ?`).all(userId, limit); }
 function getUnreadCount(userId) { return db.prepare(`SELECT COUNT(*) as c FROM notifications WHERE user_id=? AND is_read=0`).get(userId).c; }
 function markNotificationsRead(userId) { db.prepare(`UPDATE notifications SET is_read=1 WHERE user_id=? AND is_read=0`).run(userId); }
 
-function notifyMentionsInText(text, fromUserId, referenceId) {
-  const matches = (text || '').match(/@([a-zA-Z0-9_]+)/g) || [];
-  const usernames = [...new Set(matches.map(m => m.slice(1).toLowerCase()))];
-  usernames.forEach(un => {
-    const u = db.prepare(`SELECT id FROM users WHERE LOWER(username)=?`).get(un);
-    if (u && u.id !== fromUserId) addNotification(u.id, fromUserId, 'mention', referenceId);
-  });
-}
-
-function sendMessage(fromUserId, toUserId, content) {
-  const isFriend = db.prepare(`SELECT id FROM friendships WHERE status='accepted' AND ((requester_id=? AND receiver_id=?) OR (requester_id=? AND receiver_id=?))`).get(fromUserId, toUserId, toUserId, fromUserId);
-  if (!isFriend) return { error: 'You can only message friends' };
+// ═══ MESSAGES ═══
+function sendMessage(senderId, receiverId, content) {
   const id = uid();
-  db.prepare(`INSERT INTO messages(id,from_user_id,to_user_id,content) VALUES(?,?,?,?)`).run(id, fromUserId, toUserId, content);
-  addNotification(toUserId, fromUserId, 'message', id);
+  db.prepare(`INSERT INTO messages(id,sender_id,receiver_id,content) VALUES(?,?,?,?)`).run(id, senderId, receiverId, content);
+  addNotification(receiverId, senderId, 'message', id, content.slice(0,60));
   return { id };
 }
-function getConversations(userId) {
-  return db.prepare(`
-    SELECT
-      CASE WHEN m.from_user_id=? THEN m.to_user_id ELSE m.from_user_id END as user_id,
-      MAX(m.created_at) as last_at
-    FROM messages m
-    WHERE m.from_user_id=? OR m.to_user_id=?
-    GROUP BY user_id
-    ORDER BY last_at DESC
-  `).all(userId, userId, userId).map(row => {
-    const u = db.prepare(`SELECT id,username,display_name,avatar_url,belt,gym FROM users WHERE id=?`).get(row.user_id);
-    const last = db.prepare(`
-      SELECT content,created_at,from_user_id FROM messages
-      WHERE (from_user_id=? AND to_user_id=?) OR (from_user_id=? AND to_user_id=?)
-      ORDER BY created_at DESC LIMIT 1
-    `).get(userId, row.user_id, row.user_id, userId);
-    const unread = db.prepare(`SELECT COUNT(*) as c FROM messages WHERE from_user_id=? AND to_user_id=? AND is_read=0`).get(row.user_id, userId).c;
-    return { ...u, last_message: last?.content || '', last_at: last?.created_at || row.last_at, last_from_me: last?.from_user_id === userId, unread_count: unread };
-  });
+function getMessages(userId, otherId, limit = 50, offset = 0) {
+  return db.prepare(`SELECT m.*, su.username as sender_username, su.display_name as sender_name, su.avatar_url as sender_avatar FROM messages m JOIN users su ON su.id=m.sender_id WHERE (m.sender_id=? AND m.receiver_id=?) OR (m.sender_id=? AND m.receiver_id=?) ORDER BY m.created_at ASC LIMIT ? OFFSET ?`).all(userId, otherId, otherId, userId, limit, offset);
 }
-function getThread(userId, otherUserId, offset = 0, limit = 40) {
-  db.prepare(`UPDATE messages SET is_read=1 WHERE from_user_id=? AND to_user_id=?`).run(otherUserId, userId);
+function getConversations(userId) {
+  // Get latest message per conversation partner
   return db.prepare(`
-    SELECT m.*, u.username, u.display_name, u.avatar_url
-    FROM messages m JOIN users u ON u.id=m.from_user_id
-    WHERE (m.from_user_id=? AND m.to_user_id=?) OR (m.from_user_id=? AND m.to_user_id=?)
-    ORDER BY m.created_at DESC LIMIT ? OFFSET ?
-  `).all(userId, otherUserId, otherUserId, userId, limit, offset).reverse();
+    SELECT u.id, u.username, u.display_name, u.avatar_url, u.belt,
+      m.content as last_message, m.created_at as last_time, m.sender_id,
+      (SELECT COUNT(*) FROM messages WHERE sender_id=u.id AND receiver_id=? AND is_read=0) as unread
+    FROM (
+      SELECT CASE WHEN sender_id=? THEN receiver_id ELSE sender_id END as other_id,
+        MAX(created_at) as max_time
+      FROM messages WHERE sender_id=? OR receiver_id=?
+      GROUP BY other_id
+    ) conv
+    JOIN users u ON u.id=conv.other_id
+    JOIN messages m ON m.created_at=conv.max_time AND ((m.sender_id=? AND m.receiver_id=u.id) OR (m.sender_id=u.id AND m.receiver_id=?))
+    ORDER BY conv.max_time DESC
+  `).all(userId, userId, userId, userId, userId, userId);
+}
+function markMessagesRead(userId, fromId) {
+  db.prepare(`UPDATE messages SET is_read=1 WHERE sender_id=? AND receiver_id=? AND is_read=0`).run(fromId, userId);
+}
+function getUnreadMessageCount(userId) {
+  return db.prepare(`SELECT COUNT(*) as c FROM messages WHERE receiver_id=? AND is_read=0`).get(userId).c;
 }
 
 // ═══ TECHNIQUES ═══
@@ -343,6 +325,12 @@ function submitTechnique({ name, category, description, submitted_by }) {
   if (ex) return { id: ex.id, alreadyExists: true, status: ex.status };
   const r = db.prepare(`INSERT INTO techniques(name,category,description,submitted_by,status) VALUES(?,?,?,?,'pending')`).run(name, category, description||'', submitted_by||'Anonymous');
   return { id: r.lastInsertRowid, alreadyExists: false, status: 'pending' };
+}
+function addTechniqueDirect({ name, category, description }) {
+  const ex = db.prepare(`SELECT id FROM techniques WHERE LOWER(name)=LOWER(?)`).get(name);
+  if (ex) return { error: 'Already exists' };
+  const r = db.prepare(`INSERT INTO techniques(name,category,description,submitted_by,status) VALUES(?,?,?,'admin','approved')`).run(name, category, description||'');
+  return { id: r.lastInsertRowid };
 }
 function approveSubmission(id) { db.prepare(`UPDATE techniques SET status='approved',rejection_reason='' WHERE id=?`).run(id); }
 function rejectSubmission(id, reason) { db.prepare(`UPDATE techniques SET status='rejected',rejection_reason=? WHERE id=?`).run(reason||'', id); }
@@ -358,6 +346,7 @@ function getAdminStats() {
     pendingSubmissions: db.prepare(`SELECT COUNT(*) as c FROM techniques WHERE status='pending'`).get().c,
     totalMinutes: db.prepare('SELECT COALESCE(SUM(session_duration),0) as s FROM posts WHERE is_session=1').get().s||0,
     totalFriendships: db.prepare(`SELECT COUNT(*) as c FROM friendships WHERE status='accepted'`).get().c,
+    totalMessages: db.prepare('SELECT COUNT(*) as c FROM messages').get().c,
   };
 }
 
@@ -368,8 +357,8 @@ module.exports = {
   createPost, updatePost, deletePost, getPost, getFeed, getUserPosts, getUserSessions, getExplore, searchPosts,
   toggleLike, getPostLikes, addComment, getPostComments, deleteComment, toggleCommentLike,
   getNotifications, getUnreadCount, markNotificationsRead,
-  sendMessage, getConversations, getThread,
-  getApprovedTechniques, getAllTechniques, submitTechnique, getAllSubmissions, getSubmissionsByUser,
+  sendMessage, getMessages, getConversations, markMessagesRead, getUnreadMessageCount,
+  getApprovedTechniques, getAllTechniques, submitTechnique, addTechniqueDirect, getAllSubmissions, getSubmissionsByUser,
   approveSubmission, rejectSubmission, deleteTechnique,
   getAdminStats,
 };
