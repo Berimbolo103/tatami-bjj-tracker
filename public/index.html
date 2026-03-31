@@ -16,7 +16,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root,[data-theme="dark"]{
-  --fc:#FC4C02;--fc2:#e04400;--fc-g:rgba(252,76,2,.12);
+  --fc:#7C5CBF;--fc2:#6a4aad;--fc-g:rgba(124,92,191,.12);
   --bg:#0b0b0b;--bg2:#131313;--bg3:#1b1b1b;--bg4:#252525;--bg5:#2e2e2e;
   --bdr:#1a1a1a;--bdr2:#272727;--bdr3:#363636;
   --tx:#f2efea;--tx2:#a8a29e;--tx3:#6b6560;
@@ -166,7 +166,13 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 .cmt-row{display:flex;align-items:center;gap:.6rem;margin-top:2px;padding-left:2px}
 .cmt-time{font-size:.6rem;color:var(--tx3);font-family:'JetBrains Mono',monospace}
 .cmt-like-btn{background:none;border:none;font-size:.62rem;color:var(--tx3);cursor:pointer;font-weight:600;display:flex;align-items:center;gap:.2rem;padding:0}.cmt-like-btn:hover,.cmt-like-btn.liked{color:var(--fc)}
-.cmt-input-row{display:flex;gap:.4rem;margin-top:.4rem}
+.cmt-reply-btn{background:none;border:none;font-size:.62rem;color:var(--tx3);cursor:pointer;font-weight:600;padding:0}.cmt-reply-btn:hover{color:var(--fc)}
+.cmt-reply-input{display:none;margin-top:.3rem;padding-left:2rem}.cmt-reply-input.open{display:flex;gap:.4rem}
+.cmt-reply-input input{flex:1;background:var(--bg3);border:1.5px solid var(--bdr2);border-radius:99px;padding:.35rem .65rem;color:var(--tx);font-size:.76rem;outline:none}
+.cmt-reply-input input:focus{border-color:var(--fc)}
+.cmt-reply-input button{background:var(--fc);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cmt-replies{padding-left:2rem;margin-top:.2rem}
+.cmt-reply-of{font-size:.68rem;color:var(--fc);font-weight:600}
 .cmt-input-row input{flex:1;background:var(--bg3);border:1.5px solid var(--bdr2);border-radius:99px;padding:.4rem .7rem;color:var(--tx);font-size:.8rem;outline:none}
 .cmt-input-row input:focus{border-color:var(--fc)}
 .cmt-input-row button{background:var(--fc);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -241,13 +247,14 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 /* Chat view */
 .chat-header{display:flex;align-items:center;gap:.5rem;padding:10px 0;border-bottom:1px solid var(--bdr);margin-bottom:8px}
 .chat-back{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:1.1rem;padding:4px}
-.chat-messages{max-height:55vh;overflow-y:auto;padding:4px 0;display:flex;flex-direction:column;gap:4px}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100dvh - 180px)}
+.chat-messages{flex:1;overflow-y:auto;padding:4px 0;display:flex;flex-direction:column;gap:4px;min-height:0}
 .chat-msg{max-width:80%;padding:8px 12px;border-radius:14px;font-size:.84rem;line-height:1.4;word-break:break-word}
 .chat-msg.mine{align-self:flex-end;background:var(--fc);color:#fff;border-bottom-right-radius:4px}
 .chat-msg.theirs{align-self:flex-start;background:var(--bg3);color:var(--tx);border-bottom-left-radius:4px}
 .chat-msg-time{font-size:.58rem;color:var(--tx3);margin-top:2px;font-family:'JetBrains Mono',monospace}
 .chat-msg.mine .chat-msg-time{color:rgba(255,255,255,.6);text-align:right}
-.chat-input-row{display:flex;gap:.4rem;margin-top:8px;padding-top:8px;border-top:1px solid var(--bdr)}
+.chat-input-row{display:flex;gap:.4rem;padding:10px 0 4px;border-top:1px solid var(--bdr);background:var(--bg);flex-shrink:0;position:sticky;bottom:0}
 .chat-input-row input{flex:1;background:var(--bg3);border:1.5px solid var(--bdr2);border-radius:99px;padding:.5rem .8rem;color:var(--tx);font-size:.84rem;outline:none}
 .chat-input-row input:focus{border-color:var(--fc)}
 .chat-input-row button{background:var(--fc);color:#fff;border:none;border-radius:50%;width:34px;height:34px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -368,6 +375,7 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
     </div>
     <!-- Session fields with photo/video/tag inside -->
     <div class="sf" id="cp-sf">
+      <div class="field"><label>Post Content</label><textarea id="sf-content" placeholder="Share what happened at training... (shown as post caption)" style="min-height:60px"></textarea></div>
       <div class="grid2">
         <div class="field"><label>Date</label><input type="date" id="sf-date"></div>
         <div class="field"><label>Duration (min)</label><input type="number" id="sf-dur" min="0" value="60"></div>
@@ -408,6 +416,17 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <!-- LOG -->
 <div id="view-log" class="view">
 <div class="container" style="padding-top:14px">
+  <div class="top-bar">
+    <div class="top-logo" style="cursor:pointer" onclick="switchView('feed')">Roll<span>book</span></div>
+    <div style="flex:1"></div>
+    <div class="top-actions">
+      <button class="top-icon-btn" onclick="toggleTheme()" title="Theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+      <div style="position:relative">
+        <button class="top-icon-btn" onclick="toggleNotifDD()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="badge" id="notif-badge-log">0</span></button>
+        <div class="notif-dropdown" id="notif-dd-log"></div>
+      </div>
+    </div>
+  </div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
     <div><div style="font-weight:800;font-size:1.5rem">Training Log</div><div style="font-size:.72rem;color:var(--tx3)">Your personal diary</div></div>
     <button class="btn btn-ghost btn-sm" onclick="switchView('feed');setTimeout(()=>{if(!isSessionMode)cpToggleSession()},100)">+ Log Session</button>
@@ -421,7 +440,20 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <!-- EXPLORE -->
 <div id="view-explore" class="view">
 <div style="padding:14px 0 0">
-  <div class="container"><div style="font-weight:800;font-size:1.5rem;margin-bottom:10px">Explore</div></div>
+  <div class="container">
+    <div class="top-bar">
+      <div class="top-logo" style="cursor:pointer" onclick="switchView('feed')">Roll<span>book</span></div>
+      <div style="flex:1"></div>
+      <div class="top-actions">
+        <button class="top-icon-btn" onclick="toggleTheme()" title="Theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></button>
+        <div style="position:relative">
+          <button class="top-icon-btn" onclick="toggleNotifDD()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="badge" id="notif-badge-exp">0</span></button>
+          <div class="notif-dropdown" id="notif-dd-exp"></div>
+        </div>
+      </div>
+    </div>
+    <div style="font-weight:800;font-size:1.5rem;margin-bottom:10px">Discover</div>
+  </div>
   <div id="explore-grid" class="explore-grid"></div>
   <div class="container"><button class="load-more" id="explore-more" style="display:none" onclick="loadMoreExplore()">Load more</button></div>
 </div>
@@ -430,6 +462,16 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <!-- MESSAGES -->
 <div id="view-messages" class="view">
 <div class="container" style="padding-top:14px">
+  <div class="top-bar">
+    <div class="top-logo" style="cursor:pointer" onclick="switchView('feed')">Roll<span>book</span></div>
+    <div style="flex:1"></div>
+    <div class="top-actions">
+      <div style="position:relative">
+        <button class="top-icon-btn" onclick="toggleNotifDD()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="badge" id="notif-badge-msg">0</span></button>
+        <div class="notif-dropdown" id="notif-dd-msg"></div>
+      </div>
+    </div>
+  </div>
   <div id="msg-container">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <div style="font-weight:800;font-size:1.5rem">Messages</div>
@@ -444,6 +486,16 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <!-- PROFILE (includes Friends tab) -->
 <div id="view-profile" class="view">
 <div class="container" style="padding-top:4px">
+  <div class="top-bar">
+    <div class="top-logo" style="cursor:pointer" onclick="switchView('feed')">Roll<span>book</span></div>
+    <div style="flex:1"></div>
+    <div class="top-actions">
+      <div style="position:relative">
+        <button class="top-icon-btn" onclick="toggleNotifDD()"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span class="badge" id="notif-badge-prof">0</span></button>
+        <div class="notif-dropdown" id="notif-dd-prof"></div>
+      </div>
+    </div>
+  </div>
   <div id="profile-content"></div>
 </div>
 </div>
@@ -452,7 +504,7 @@ nav{position:fixed;bottom:0;left:0;right:0;height:60px;background:var(--nav-bg);
 <nav>
   <button class="nav-btn active" data-view="feed" onclick="switchView('feed')"><svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Feed</button>
   <button class="nav-btn" data-view="log" onclick="switchView('log')"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>Log</button>
-  <button class="nav-btn" data-view="explore" onclick="switchView('explore')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explore</button>
+  <button class="nav-btn" data-view="explore" onclick="switchView('explore')"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Discover</button>
   <button class="nav-btn" data-view="messages" onclick="switchView('messages')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="nav-badge" id="badge-msg">0</span>Messages</button>
   <button class="nav-btn" data-view="profile" onclick="switchView('profile');loadMyProfile()"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me</button>
 </nav>
@@ -500,7 +552,7 @@ async function initApp(){try{ME=await api('/api/auth/me');if(ME.theme)applyTheme
 if(!ME.onboarded){document.getElementById('onboard-overlay').classList.add('open')}
 const a=document.getElementById('feed-av');if(ME.avatar_url)a.innerHTML=`<img src="${ME.avatar_url}">`;else a.textContent=(ME.display_name||ME.username||'?')[0].toUpperCase();allTechs=await api('/api/techniques');populateSelects();loadFeed(true);pollBadges()}catch(e){TOKEN='';localStorage.removeItem('rb_token');document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}}
 
-function switchView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===n));if(n==='log')loadLog();if(n==='explore')loadExplore(true);if(n==='messages')loadConversations()}
+function switchView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===n));if(n==='feed')loadFeed(true);if(n==='log')loadLog();if(n==='explore')loadExplore(true);if(n==='messages')loadConversations()}
 
 // ═══ + MENU ═══
 function togglePlusMenu(){const m=document.getElementById('plus-menu'),b=document.getElementById('plus-toggle');m.classList.toggle('open');b.classList.toggle('open')}
@@ -513,26 +565,43 @@ if(!html)html='<div style="padding:.6rem;color:var(--tx3);font-size:.8rem">No re
 function scrollToPost(id){switchView('feed');setTimeout(()=>{const el=document.getElementById('post-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},300)}
 
 // ═══ NOTIFICATIONS (dropdown, click→post) ═══
-function toggleNotifDD(){const dd=document.getElementById('notif-dd');dd.classList.toggle('open');if(dd.classList.contains('open'))loadNotifDD()}
-async function loadNotifDD(){const ns=await api('/api/notifications');const el=document.getElementById('notif-dd-list');if(!ns.length){el.innerHTML='<div style="padding:1rem;text-align:center;color:var(--tx3);font-size:.82rem">No notifications yet</div>';return}el.innerHTML=ns.slice(0,20).map(n=>{const from=n.from_display_name||n.from_username||'Someone';let text='',ref=n.reference_id||'';
+function toggleNotifDD(){
+  // Close all notif dropdowns first
+  document.querySelectorAll('.notif-dropdown').forEach(dd=>dd.classList.remove('open'));
+  // Find the visible one (the one whose button was clicked)
+  const activeView=document.querySelector('.view.active');
+  let dd=null;
+  if(activeView&&activeView.id==='view-feed')dd=document.getElementById('notif-dd');
+  else if(activeView&&activeView.id==='view-log')dd=document.getElementById('notif-dd-log');
+  else if(activeView&&activeView.id==='view-explore')dd=document.getElementById('notif-dd-exp');
+  else if(activeView&&activeView.id==='view-messages')dd=document.getElementById('notif-dd-msg');
+  else if(activeView&&activeView.id==='view-profile')dd=document.getElementById('notif-dd-prof');
+  if(!dd)return;
+  dd.classList.toggle('open');
+  if(dd.classList.contains('open'))loadNotifInto(dd);
+}
+async function loadNotifDD(){loadNotifInto(document.getElementById('notif-dd'))}
+async function loadNotifInto(dd){if(!dd)return;const ns=await api('/api/notifications');
+const headHTML='<div class="notif-dd-head"><span class="notif-dd-title">Notifications</span><button class="btn btn-ghost btn-sm" onclick="markAllRead()">Mark read</button></div>';
+if(!ns.length){dd.innerHTML=headHTML+'<div style="padding:1rem;text-align:center;color:var(--tx3);font-size:.82rem">No notifications yet</div>';return}
+dd.innerHTML=headHTML+ns.slice(0,20).map(n=>{const from=n.from_display_name||n.from_username||'Someone';let text='',ref=n.reference_id||'';
 switch(n.type){case'like':text=`<strong>${esc(from)}</strong> liked your post`;break;case'comment':text=`<strong>${esc(from)}</strong> commented on your post`;break;case'comment_like':text=`<strong>${esc(from)}</strong> liked your comment`;break;case'mention':text=`<strong>${esc(from)}</strong> mentioned you`;break;case'friend_request':text=`<strong>${esc(from)}</strong> wants to be your friend`;break;case'friend_accept':text=`<strong>${esc(from)}</strong> accepted your request`;break;case'tag':text=`<strong>${esc(from)}</strong> tagged you`;break;case'message':text=`<strong>${esc(from)}</strong> sent you a message`;break;default:text=`<strong>${esc(from)}</strong> interacted`}
 const preview=n.preview?`<div class="notif-preview">"${esc(n.preview)}"</div>`:'';
-return`<div class="notif-item ${n.is_read?'':'unread'}" onclick="handleNotifClick('${n.type}','${ref}','${n.from_user_id||''}');toggleNotifDD()">${n.from_avatar_url?`<div class="av av-s"><img src="${n.from_avatar_url}"></div>`:`<div class="av av-s">${(from[0]||'?').toUpperCase()}</div>`}<div class="notif-text">${text}${preview}<div class="notif-time">${timeAgo(n.created_at)}</div></div></div>`}).join('');markAllRead()}
+return`<div class="notif-item ${n.is_read?'':'unread'}" onclick="handleNotifClick('${n.type}','${ref}','${n.from_user_id||''}');document.querySelectorAll('.notif-dropdown').forEach(d=>d.classList.remove('open'))">${n.from_avatar_url?`<div class="av av-s"><img src="${n.from_avatar_url}"></div>`:`<div class="av av-s">${(from[0]||'?').toUpperCase()}</div>`}<div class="notif-text">${text}${preview}<div class="notif-time">${timeAgo(n.created_at)}</div></div></div>`}).join('');
+markAllRead()}
 function handleNotifClick(type,ref,fromId){
   if(type==='friend_request'){switchView('profile');loadMyProfile();setTimeout(()=>{const tabs=document.querySelectorAll('.profile-tab');if(tabs[2])tabs[2].click()},400);return}
   if(type==='message'){if(fromId){switchView('messages');setTimeout(()=>openChat(fromId),200)}return}
   if(type==='like'||type==='comment'||type==='tag'||type==='mention'){if(ref){switchView('feed');setTimeout(()=>{const el=document.getElementById('post-'+ref);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},300)}return}
   if(fromId)viewProfile(fromId);else switchView('feed')
 }
-async function markAllRead(){await api('/api/notifications/mark-read',{method:'POST'});document.getElementById('notif-badge-top').classList.remove('show')}
-async function pollBadges(){try{const r=await api('/api/notifications/unread-count');const b=document.getElementById('notif-badge-top');if(r.count>0){b.textContent=r.count;b.classList.add('show')}else b.classList.remove('show');const mr=await api('/api/messages/unread-count');const mb=document.getElementById('badge-msg');if(mr.count>0){mb.textContent=mr.count;mb.classList.add('show')}else mb.classList.remove('show');
-// Auto-show notif dropdown if new
-if(r.count>0&&!document.getElementById('notif-dd').classList.contains('open')){loadNotifDD()}}catch(e){}}
+async function markAllRead(){await api('/api/notifications/mark-read',{method:'POST'});['notif-badge-top','notif-badge-log','notif-badge-exp','notif-badge-msg','notif-badge-prof'].forEach(id=>{const b=document.getElementById(id);if(b)b.classList.remove('show')})}
+async function pollBadges(){try{const r=await api('/api/notifications/unread-count');['notif-badge-top','notif-badge-log','notif-badge-exp','notif-badge-msg','notif-badge-prof'].forEach(id=>{const b=document.getElementById(id);if(!b)return;if(r.count>0){b.textContent=r.count;b.classList.add('show')}else b.classList.remove('show')});const mr=await api('/api/messages/unread-count');const mb=document.getElementById('badge-msg');if(mr.count>0){mb.textContent=mr.count;mb.classList.add('show')}else mb.classList.remove('show')}catch(e){}}
 setInterval(()=>{if(TOKEN&&ME)pollBadges()},15000);
 // Auto-refresh feed every 30s
 setInterval(()=>{if(TOKEN&&ME&&document.querySelector('[data-view="feed"].active')){checkNewPosts()}},30000);
 async function checkNewPosts(){const posts=await api('/api/feed?offset=0');if(posts.length&&posts[0].created_at!==lastFeedTs){loadFeed(true)}}
-document.addEventListener('click',e=>{if(!e.target.closest('#notif-bell')&&!e.target.closest('.notif-dropdown'))document.getElementById('notif-dd').classList.remove('open')});
+document.addEventListener('click',e=>{if(!e.target.closest('.top-icon-btn')&&!e.target.closest('.notif-dropdown'))document.querySelectorAll('.notif-dropdown').forEach(d=>d.classList.remove('open'))});
 
 // ═══ FEED ═══
 async function loadFeed(reset){if(reset){feedOff=0;feedMore=true;document.getElementById('feed-list').innerHTML=''}const posts=await api(`/api/feed?offset=${feedOff}`);const el=document.getElementById('feed-list');if(!posts.length&&feedOff===0){el.innerHTML='<div class="empty"><p style="font-size:1.4rem">🥋</p><p>Your feed is empty.<br>Add friends to see their sessions!</p></div>';document.getElementById('feed-more').style.display='none';return}
@@ -557,7 +626,7 @@ ${feel}${body}${media}${sess}
 function renderSessionEmbed(p){
   const techs=(p.session_techniques||[]).slice(0,5).map(t=>`<span class="tag gold">${esc(t)}</span>`).join('');
   const subs=(p.session_submissions||[]).map(s=>`<span class="tag ${s.role==='gave'?'grn':'red'}">${esc(s.technique)} ${s.role==='gave'?'✓':'✗'}</span>`).join('');
-  return`<div class="post-session"><span class="ps-badge">Session</span><div class="ps-date">🥋 ${p.session_date||''}</div><div class="ps-stats"><span>⏱ ${p.session_duration||0}min</span><span>🤼 ${p.session_sparring||0} rnds</span>${p.session_drills?`<span>🔄 ${p.session_drills}min drills</span>`:''}</div>${p.session_notes?`<div class="ps-notes">${esc(p.session_notes)}</div>`:''}${techs?`<div class="ps-techs">${techs}</div>`:''}${subs?`<div class="ps-subs">${subs}</div>`:''}</div>`}
+  return`<div class="post-session"><span class="ps-badge">Session</span><div class="ps-date">🥋 ${p.session_date||''}</div><div class="ps-stats"><span>⏱ ${p.session_duration||0}min</span><span>🤼 ${p.session_sparring||0} rnds</span>${p.session_drills?`<span>🔄 ${p.session_drills}min drills</span>`:''}</div>${techs?`<div class="ps-techs" style="margin:.3rem 0">${techs}</div>`:''}${subs?`<div class="ps-subs" style="margin:.2rem 0 .3rem">${subs}</div>`:''}${p.session_notes?`<div class="ps-notes">${esc(p.session_notes)}</div>`:''}</div>`}
 
 function renderMentions(t){return esc(t).replace(/@(\w+)/g,'<span class="post-mention" onclick="findUser(\'$1\')">@$1</span>')}
 
@@ -569,8 +638,12 @@ async function saveEdit(id,isSess){const body={content:document.getElementById('
 
 // COMMENTS (with @mention support)
 async function loadCmts(pid){const sec=document.getElementById('cmts-'+pid);if(!sec)return;const cmts=await api(`/api/posts/${pid}/comments`);const inputRow=sec.querySelector('.cmt-input-row');const iHTML=inputRow?inputRow.outerHTML:`<div class="cmt-input-row"><input id="ci-${pid}" placeholder="Write a comment... (use @username to mention)" onkeydown="if(event.key==='Enter')postCmt('${pid}')"><button onclick="postCmt('${pid}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>`;
-sec.innerHTML=cmts.map(c=>`<div class="cmt"><div>${av(c,'av-s')}</div><div class="cmt-body"><div class="cmt-bubble"><span class="cmt-author" onclick="viewProfile('${c.user_id}')">${esc(c.display_name||c.username)}</span> <span class="cmt-text">${renderMentions(c.content)}</span></div><div class="cmt-row"><span class="cmt-time">${timeAgo(c.created_at)}</span><button class="cmt-like-btn${c.user_liked?' liked':''}" onclick="likeCmt('${c.id}',this)">♥ ${c.like_count||''}</button></div></div></div>`).join('')+iHTML}
+sec.innerHTML=cmts.map(c=>{
+  const replies=(c.replies||[]).map(r=>`<div class="cmt" style="margin-bottom:.3rem"><div>${av(r,'av-s')}</div><div class="cmt-body"><div class="cmt-bubble"><span class="cmt-reply-of">↩ ${esc(c.display_name||c.username)}</span> <span class="cmt-author" onclick="viewProfile('${r.user_id}')">${esc(r.display_name||r.username)}</span> <span class="cmt-text">${renderMentions(r.content)}</span></div><div class="cmt-row"><span class="cmt-time">${timeAgo(r.created_at)}</span><button class="cmt-like-btn${r.user_liked?' liked':''}" onclick="likeCmt('${r.id}',this)">♥ ${r.like_count||''}</button></div></div></div>`).join('');
+  return`<div class="cmt" id="cmt-${c.id}"><div>${av(c,'av-s')}</div><div class="cmt-body"><div class="cmt-bubble"><span class="cmt-author" onclick="viewProfile('${c.user_id}')">${esc(c.display_name||c.username)}</span> <span class="cmt-text">${renderMentions(c.content)}</span></div><div class="cmt-row"><span class="cmt-time">${timeAgo(c.created_at)}</span><button class="cmt-like-btn${c.user_liked?' liked':''}" onclick="likeCmt('${c.id}',this)">♥ ${c.like_count||''}</button><button class="cmt-reply-btn" onclick="toggleReplyBox('${pid}','${c.id}','${esc(c.display_name||c.username)}')">Reply</button></div>${replies?`<div class="cmt-replies">${replies}</div>`:''}<div class="cmt-reply-input" id="reply-box-${c.id}"><input id="reply-inp-${c.id}" placeholder="Reply to ${esc(c.display_name||c.username)}..." onkeydown="if(event.key==='Enter')postReply('${pid}','${c.id}')"><button onclick="postReply('${pid}','${c.id}')"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div></div>`}).join('')+iHTML}
 function focusCmt(id){document.getElementById('ci-'+id)?.focus()}
+function toggleReplyBox(pid,cid,name){const box=document.getElementById('reply-box-'+cid);if(!box)return;box.classList.toggle('open');if(box.classList.contains('open'))document.getElementById('reply-inp-'+cid)?.focus()}
+async function postReply(pid,parentCid){const i=document.getElementById('reply-inp-'+parentCid);const c=i.value.trim();if(!c)return;try{await api(`/api/posts/${pid}/comments`,{method:'POST',body:{content:c,parent_id:parentCid}});i.value='';document.getElementById('reply-box-'+parentCid)?.classList.remove('open');loadCmts(pid)}catch(e){toast(e.message,true)}}
 async function postCmt(pid){const i=document.getElementById('ci-'+pid);const c=i.value.trim();if(!c)return;try{await api(`/api/posts/${pid}/comments`,{method:'POST',body:{content:c}});i.value='';loadCmts(pid);const cc=document.getElementById('cc-'+pid);if(cc)cc.textContent=parseInt(cc.textContent)+1}catch(e){toast(e.message,true)}}
 async function likeCmt(cid,btn){try{const r=await api(`/api/comments/${cid}/like`,{method:'POST'});btn.classList.toggle('liked',r.liked);const cur=parseInt(btn.textContent.replace('♥','').trim()||0);btn.innerHTML='♥ '+(cur+(r.liked?1:-1)||'')}catch(e){}}
 async function toggleLike(pid,btn){try{const r=await api(`/api/posts/${pid}/like`,{method:'POST'});btn.classList.toggle('liked',r.liked);btn.querySelector('span').textContent=parseInt(btn.querySelector('span').textContent)+(r.liked?1:-1)}catch(e){}}
@@ -580,11 +653,11 @@ function cpToggleSession(){isSessionMode=!isSessionMode;document.getElementById(
 function cpUpdate(){document.getElementById('cp-submit').disabled=!(document.getElementById('cp-text').value.trim()||cpMediaUrl||isSessionMode)}
 async function cpUpload(inp){if(!inp.files[0])return;try{const r=await upload('/api/posts/upload',inp.files[0]);cpMediaUrl=r.url;cpMediaType=r.type;const p=document.getElementById('cp-media');p.style.display='block';p.innerHTML=(r.type==='video'?`<video src="${r.url}" style="max-height:110px;border-radius:8px" controls></video>`:`<img src="${r.url}">`)+`<button class="media-rm" onclick="cpRmMedia()">×</button>`;cpUpdate()}catch(e){toast('Upload failed',true)}inp.value=''}
 function cpRmMedia(){cpMediaUrl='';cpMediaType='';const p=document.getElementById('cp-media');p.style.display='none';p.innerHTML='';cpUpdate()}
-async function cpPost(){const content=document.getElementById('cp-text').value.trim();const tags=cpTagged.map(u=>'@'+u.username).join(' ');const full=content+(tags?(content?'\n':'')+tags:'');const body={content:full,tagged_users:cpTagged.map(u=>u.id),is_public:1};
+async function cpPost(){const content=isSessionMode?(document.getElementById('sf-content').value.trim()):(document.getElementById('cp-text').value.trim());const tags=cpTagged.map(u=>'@'+u.username).join(' ');const full=content+(tags?(content?'\n':'')+tags:'');const body={content:full,tagged_users:cpTagged.map(u=>u.id),is_public:1};
 if(cpMediaType==='video')body.video_url=cpMediaUrl;else if(cpMediaUrl)body.image_url=cpMediaUrl;
 if(isSessionMode){body.feeling=document.getElementById('sf-feel').value.trim();body.is_session=true;body.session_date=document.getElementById('sf-date').value;body.session_duration=parseInt(document.getElementById('sf-dur').value)||0;body.session_sparring=parseInt(document.getElementById('sf-spar').value)||0;body.session_drills=parseInt(document.getElementById('sf-drill').value)||0;body.session_notes=document.getElementById('sf-notes').value;body.session_techniques=cpTechs;body.session_submissions=cpSubs;body.is_public=document.getElementById('sf-public').checked?1:0;if(!body.session_date||!body.session_duration){toast('Date & duration required',true);return}if(cpMediaUrl&&cpMediaType!=='video')body.image_url=cpMediaUrl}
 try{await api('/api/posts',{method:'POST',body});cpReset();toast(isSessionMode?'Session logged! 🥋':'Posted! 🤙');isSessionMode=false;document.getElementById('cp-sf').classList.remove('open');document.getElementById('cp-session-btn').classList.remove('on');document.getElementById('cp-text').placeholder='How was your roll today?';loadFeed(true)}catch(e){toast(e.message,true)}}
-function cpReset(){document.getElementById('cp-text').value='';cpMediaUrl='';cpMediaType='';cpTagged=[];cpTechs=[];cpSubs=[];document.getElementById('cp-media').style.display='none';document.getElementById('cp-media').innerHTML='';document.getElementById('cp-tags').innerHTML='';document.getElementById('cp-submit').disabled=true;if(document.getElementById('sf-feel'))document.getElementById('sf-feel').value='';if(document.getElementById('sf-notes'))document.getElementById('sf-notes').value='';renderSfTags()}
+function cpReset(){document.getElementById('cp-text').value='';cpMediaUrl='';cpMediaType='';cpTagged=[];cpTechs=[];cpSubs=[];document.getElementById('cp-media').style.display='none';document.getElementById('cp-media').innerHTML='';document.getElementById('cp-tags').innerHTML='';document.getElementById('cp-submit').disabled=true;if(document.getElementById('sf-feel'))document.getElementById('sf-feel').value='';if(document.getElementById('sf-notes'))document.getElementById('sf-notes').value='';if(document.getElementById('sf-content'))document.getElementById('sf-content').value='';renderSfTags()}
 
 function populateSelects(){const s1=document.getElementById('sf-tech-sel'),s2=document.getElementById('sf-sub-sel');s1.innerHTML='<option value="">Choose technique...</option>'+allTechs.map(t=>`<option value="${t.name}">${t.name} (${t.category})</option>`).join('');s2.innerHTML='<option value="">Technique...</option>'+allTechs.filter(t=>t.category==='submission').map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}
 function sfAddTech(n){if(!n||cpTechs.includes(n))return;cpTechs.push(n);renderSfTags()}
@@ -617,7 +690,7 @@ function openNewMsgPicker(){openModal('New Message',`<div class="field"><input i
 async function nmSearch(q){if(q.length<2)return;const r=await api(`/api/users/search?q=${encodeURIComponent(q)}`);document.getElementById('nm-results').innerHTML=r.map(f=>`<div class="friend-item" onclick="closeModal();openChat('${f.id}')">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div></div></div>`).join('')}
 let chatOther=null,chatInterval=null;
 async function openChat(userId){chatOther=userId;document.getElementById('msg-container').style.display='none';document.getElementById('chat-container').style.display='block';const prof=await api(`/api/profile/${userId}`);const msgs=await api(`/api/messages/${userId}`);
-document.getElementById('chat-container').innerHTML=`<div class="chat-header"><button class="chat-back" onclick="loadConversations()">←</button>${av(prof,'av-s')}<div style="flex:1"><div style="font-weight:700;font-size:.88rem;cursor:pointer" onclick="viewProfile('${userId}')">${esc(prof.display_name||prof.username)}</div><div style="font-size:.68rem;color:var(--tx3)">@${prof.username}</div></div></div><div class="chat-messages" id="chat-msgs">${msgs.map(m=>`<div class="chat-msg ${m.sender_id===ME.id?'mine':'theirs'}">${esc(m.content)}<div class="chat-msg-time">${timeAgo(m.created_at)}</div></div>`).join('')}</div><div class="chat-input-row"><input id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>`;
+document.getElementById('chat-container').innerHTML=`<div class="chat-wrap"><div class="chat-header"><button class="chat-back" onclick="loadConversations()">←</button>${av(prof,'av-s')}<div style="flex:1"><div style="font-weight:700;font-size:.88rem;cursor:pointer" onclick="viewProfile('${userId}')">${esc(prof.display_name||prof.username)}</div><div style="font-size:.68rem;color:var(--tx3)">@${prof.username}</div></div></div><div class="chat-messages" id="chat-msgs">${msgs.map(m=>`<div class="chat-msg ${m.sender_id===ME.id?'mine':'theirs'}">${esc(m.content)}<div class="chat-msg-time">${timeAgo(m.created_at)}</div></div>`).join('')}</div><div class="chat-input-row"><input id="chat-input" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendMsg()"><button onclick="sendMsg()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>`;
 const c=document.getElementById('chat-msgs');c.scrollTop=c.scrollHeight;
 if(chatInterval)clearInterval(chatInterval);chatInterval=setInterval(()=>refreshChat(userId),5000)}
 async function refreshChat(userId){if(chatOther!==userId)return;const msgs=await api(`/api/messages/${userId}`);const c=document.getElementById('chat-msgs');if(!c)return;const atBottom=c.scrollHeight-c.scrollTop-c.clientHeight<50;c.innerHTML=msgs.map(m=>`<div class="chat-msg ${m.sender_id===ME.id?'mine':'theirs'}">${esc(m.content)}<div class="chat-msg-time">${timeAgo(m.created_at)}</div></div>`).join('');if(atBottom)c.scrollTop=c.scrollHeight}
@@ -636,7 +709,7 @@ el.innerHTML=`<div class="profile-card">${isSelf?`<button class="btn btn-ghost b
 if(isSelf)el.querySelector('.profile-card').insertAdjacentHTML('beforeend',`<div class="profile-actions" style="margin-top:.3rem"><button class="btn btn-danger btn-sm" onclick="logout()">Sign Out</button></div>`);
 profTab(el.querySelector('[data-ptab="posts"]'),'posts',userId)}
 function profTab(btn,tab,uid){document.querySelectorAll('.profile-tab').forEach(t=>{t.classList.remove('active')});if(btn)btn.classList.add('active');if(tab==='posts')loadProfPosts(uid);else if(tab==='sessions')loadProfSessions(uid);else if(tab==='friends')loadProfFriends()}
-async function loadProfPosts(uid){const posts=await api(`/api/posts/user/${uid}`);const el=document.getElementById('prof-tab');el.innerHTML=posts.length?posts.map(p=>renderPost(p)).join(''):'<div class="empty"><p>No posts yet</p></div>';posts.forEach(p=>loadCmts(p.id))}
+async function loadProfPosts(uid){const posts=await api(`/api/posts/user/${uid}`);const el=document.getElementById('prof-tab');el.innerHTML=posts.length?posts.map(p=>renderPost(p)).join(''):'<div class="empty"><p>No posts yet</p></div>';setTimeout(()=>posts.forEach(p=>loadCmts(p.id)),50)}
 async function loadProfSessions(uid){const s=await api(`/api/sessions?user_id=${uid}`);document.getElementById('prof-tab').innerHTML=s.length?s.map(x=>`<div class="log-item" onclick="viewLogDetail('${x.id}')"><div class="log-date">${x.session_date}</div><div class="log-info"><div class="log-title">${x.session_duration}min · ${x.session_sparring||0} rnds</div><div class="log-detail">${esc(x.feeling||(x.session_techniques||[]).slice(0,3).join(', ')||'No details')}</div></div></div>`).join(''):'<div class="empty"><p>No public sessions</p></div>'}
 async function loadProfFriends(){const pending=await api('/api/friends/pending');const friends=await api('/api/friends');let html='';if(pending.length){html+=`<div class="section-title" style="margin-bottom:.3rem">Pending Requests (${pending.length})</div>`;html+=pending.map(f=>`<div class="friend-item">${av(f,'av-s')}<div class="fi-info"><div class="fi-name">${esc(f.display_name||f.username)}</div><div class="fi-detail">@${f.username}</div></div><div class="fi-actions"><button class="btn btn-success btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',true)">Accept</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();respondFR('${f.friendship_id}',false)">✕</button></div></div>`).join('')}
 html+=`<div class="section-title" style="margin-top:.6rem;margin-bottom:.3rem">Friends (${friends.length})</div>`;
