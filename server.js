@@ -29,6 +29,8 @@ app.use((req,res,next) => {
 });
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+// Serve uploads from volume (UPLOAD_DIR may differ from public/uploads)
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 function auth(req,res,next) {
   const token = (req.headers.authorization||'').replace('Bearer ','');
