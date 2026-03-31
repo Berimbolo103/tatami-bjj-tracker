@@ -7,18 +7,16 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="TATAMI">
-<meta name="theme-color" content="#0d0d0d">
+<meta id="meta-theme" name="theme-color" content="#0a0a0a">
 <meta name="description" content="TATAMI — BJJ Social Platform. Track sessions, share with training partners.">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
-<meta property="og:title" content="TATAMI — BJJ Social Platform">
-<meta property="og:description" content="The social platform for grapplers. Track. Share. Roll together.">
-<meta property="og:type" content="website">
 <title>TATAMI — BJJ Social Platform</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{
+/* ── THEME VARIABLES ── */
+:root,[data-theme="dark"]{
   --red:#e63946;--red-dim:#c1121f;--red-glow:rgba(230,57,70,0.14);
   --bg:#0a0a0a;--bg2:#111;--bg3:#1a1a1a;--bg4:#222;
   --border:#1e1e1e;--border2:#2a2a2a;--border3:#333;
@@ -26,185 +24,188 @@
   --gold:#c9a84c;--gold-dim:rgba(201,168,76,0.13);
   --blue:#457b9d;--blue-glow:rgba(69,123,157,0.15);
   --green:#2d6a4f;--green-bright:#52b788;
-  --pending:#e8a020;--pending-dim:rgba(232,160,32,0.13);
-  --radius:12px;--radius-sm:8px;--radius-xs:6px;--nav-h:64px;
-  --font-d:'Bebas Neue',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'JetBrains Mono',monospace;
+  --nav-bg:rgba(10,10,10,0.97);
+}
+[data-theme="light"]{
+  --bg:#f5f3ef;--bg2:#fff;--bg3:#eae7e2;--bg4:#ddd;
+  --border:#d5d0c8;--border2:#c5c0b8;--border3:#b0a99f;
+  --text:#1a1a1a;--text2:#555;--text3:#888;
+  --gold:#9a7b2e;--gold-dim:rgba(154,123,46,0.12);
+  --blue:#2e6a8e;--blue-glow:rgba(46,106,142,0.12);
+  --green:#1e5e3f;--green-bright:#2a9d68;
+  --nav-bg:rgba(245,243,239,0.97);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;background:var(--bg);color:var(--text);font-family:var(--font-b)}
+html{font-size:16px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;transition:background .3s,color .3s}
 body{min-height:100dvh;overflow-x:hidden}
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border3);border-radius:2px}
 a{color:var(--red);text-decoration:none}
-input,textarea,select,button{font-family:inherit}
+input,textarea,select,button{font-family:inherit;transition:background .3s,border .3s,color .3s}
 
-/* ── LAYOUT ── */
+--radius:12px;
 #app{display:flex;flex-direction:column;min-height:100dvh}
-.view{display:none;flex:1;overflow-y:auto;padding:1rem 1rem calc(var(--nav-h) + 1.5rem)}
-.view.active{display:block}
+.view{display:none;flex:1;overflow-y:auto;padding:1rem 1rem calc(68px + 1.5rem)}.view.active{display:block}
 
-/* ── AUTH SCREENS ── */
+/* ── AUTH ── */
 #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:2rem;background:var(--bg)}
 .auth-box{width:100%;max-width:380px}
-.auth-logo{font-family:var(--font-d);font-size:4rem;letter-spacing:.06em;text-align:center;line-height:1;margin-bottom:.25rem;color:var(--red)}
-.auth-sub{text-align:center;color:var(--text3);font-size:.85rem;margin-bottom:2rem;font-family:var(--font-m);letter-spacing:.04em}
+.auth-logo{font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:.06em;text-align:center;line-height:1;margin-bottom:.25rem;color:var(--red)}
+.auth-sub{text-align:center;color:var(--text3);font-size:.85rem;margin-bottom:2rem;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
 .auth-tab-row{display:flex;margin-bottom:1.5rem;border-bottom:1px solid var(--border2)}
 .auth-tab{flex:1;padding:.6rem;text-align:center;background:none;border:none;color:var(--text3);font-size:.85rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
 .auth-tab.active{color:var(--red);border-bottom-color:var(--red)}
 .auth-form{display:none}.auth-form.active{display:block}
 .field{margin-bottom:1rem}
-.field label{display:block;font-size:.7rem;font-family:var(--font-m);letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:.35rem}
-.field input,.field select,.field textarea{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.65rem .75rem;color:var(--text);font-size:.9rem;outline:none;transition:border .2s}
+.field label{display:block;font-size:.7rem;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;margin-bottom:.35rem}
+.field input,.field select,.field textarea{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:.65rem .75rem;color:var(--text);font-size:.9rem;outline:none;transition:border .2s}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red)}
 .field textarea{resize:vertical;min-height:80px}
-.btn-primary{width:100%;padding:.75rem;background:var(--red);color:#fff;border:none;border-radius:var(--radius-sm);font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:.02em}
-.btn-primary:hover{background:var(--red-dim)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed}
-.btn-secondary{padding:.5rem 1rem;background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary{width:100%;padding:.75rem;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary:hover{background:var(--red-dim)}.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-secondary{padding:.5rem 1rem;background:var(--bg3);color:var(--text2);border:1px solid var(--border2);border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;transition:.2s}
 .btn-secondary:hover{border-color:var(--text3);color:var(--text)}
-.btn-small{padding:.35rem .7rem;font-size:.75rem;border-radius:var(--radius-xs)}
+.btn-small{padding:.35rem .7rem;font-size:.75rem;border-radius:6px}
 .btn-danger{background:rgba(230,57,70,.15);color:var(--red);border-color:var(--red)}
 .btn-success{background:rgba(82,183,136,.15);color:var(--green-bright);border-color:var(--green-bright)}
-.auth-error{background:rgba(230,57,70,.1);border:1px solid var(--red);color:var(--red);padding:.5rem .75rem;border-radius:var(--radius-xs);font-size:.8rem;margin-bottom:1rem;display:none}
+.auth-error{background:rgba(230,57,70,.1);border:1px solid var(--red);color:var(--red);padding:.5rem .75rem;border-radius:6px;font-size:.8rem;margin-bottom:1rem;display:none}
 
 /* ── NAV ── */
-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(10,10,10,0.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;z-index:100}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:8px;font-family:var(--font-b);font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:color .2s;position:relative}
+nav{position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--nav-bg);backdrop-filter:blur(16px);border-top:1px solid var(--border);display:flex;z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:8px;font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase;transition:color .2s;position:relative}
 .nav-btn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;transition:.2s}
 .nav-btn.active{color:var(--red)}.nav-btn.active svg{stroke:var(--red)}
-.nav-badge{position:absolute;top:5px;right:calc(50% - 15px);min-width:17px;height:17px;background:var(--red);color:#fff;font-size:9px;font-family:var(--font-m);font-weight:600;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px}
+.nav-badge{position:absolute;top:5px;right:calc(50% - 15px);min-width:17px;height:17px;background:var(--red);color:#fff;font-size:9px;font-family:'JetBrains Mono',monospace;font-weight:600;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 4px}
 .nav-badge.show{display:flex}
 
-/* ── PAGE HEADER ── */
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-top:.5rem}
-.page-title{font-family:var(--font-d);font-size:2.2rem;letter-spacing:.03em;line-height:1}
-.page-sub{font-size:.72rem;color:var(--text3);font-family:var(--font-m);letter-spacing:.05em}
-
-/* ── CARDS ── */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem}
-.card-label{font-size:.65rem;font-family:var(--font-m);letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.4rem}
-.card-val{font-family:var(--font-d);font-size:2.4rem;line-height:1;letter-spacing:.02em}
-.card-val.red{color:var(--red)}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;letter-spacing:.03em;line-height:1}
+.page-sub{font-size:.72rem;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
+.card-label{font-size:.65rem;font-family:'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.4rem}
+.card-val{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;line-height:1}.card-val.red{color:var(--red)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem}
-
-/* ── TAGS ── */
-.tag{display:inline-flex;align-items:center;gap:.3rem;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:.2rem .6rem;font-size:.72rem;font-family:var(--font-m);color:var(--text2);margin:.2rem}
+.tag{display:inline-flex;align-items:center;gap:.3rem;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:.2rem .6rem;font-size:.72rem;font-family:'JetBrains Mono',monospace;color:var(--text2);margin:.2rem}
 .tag.red{background:var(--red-glow);border-color:var(--red);color:var(--red)}
 .tag.gold{background:var(--gold-dim);border-color:var(--gold);color:var(--gold)}
 .tag.green{background:rgba(45,106,79,.2);border-color:var(--green-bright);color:var(--green-bright)}
 .tag.blue{background:var(--blue-glow);border-color:var(--blue);color:var(--blue)}
-
-/* ── BELT BADGE ── */
 .belt-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0}
-.belt-white{background:#e8e4dc;border:1px solid #999}.belt-blue{background:#1a5fb4}.belt-purple{background:#7b3fa0}
-.belt-brown{background:#7c4a1e}.belt-black{background:#1a1a1a;border:1px solid #555}.belt-red-b{background:#c1121f}
-
-/* ── AVATAR ── */
-.avatar{width:40px;height:40px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-family:var(--font-d);font-size:1.1rem;color:var(--text3)}
+.belt-white{background:#e8e4dc;border:1px solid #999}.belt-blue{background:#1a5fb4}.belt-purple{background:#7b3fa0}.belt-brown{background:#7c4a1e}.belt-black{background:#1a1a1a;border:1px solid #555}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--bg4);border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:var(--text3)}
 .avatar img{width:100%;height:100%;object-fit:cover}
-.avatar-sm{width:32px;height:32px;font-size:.9rem}
-.avatar-lg{width:64px;height:64px;font-size:1.6rem;border-width:3px}
-.avatar-xl{width:80px;height:80px;font-size:2rem;border-width:3px}
+.avatar-sm{width:32px;height:32px;font-size:.9rem}.avatar-lg{width:64px;height:64px;font-size:1.6rem;border-width:3px}.avatar-xl{width:80px;height:80px;font-size:2rem;border-width:3px}
 
 /* ── POST CARD ── */
-.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:.85rem;overflow:hidden}
+.post-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:.85rem;overflow:hidden}
 .post-header{display:flex;align-items:center;gap:.65rem;padding:.85rem 1rem .5rem}
 .post-user-info{flex:1;min-width:0}
-.post-username{font-weight:600;font-size:.88rem;cursor:pointer}
-.post-username:hover{color:var(--red)}
-.post-meta{font-size:.7rem;color:var(--text3);font-family:var(--font-m)}
-.post-delete{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;font-size:1.1rem;line-height:1}
+.post-username{font-weight:600;font-size:.88rem;cursor:pointer}.post-username:hover{color:var(--red)}
+.post-meta{font-size:.7rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.post-delete{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;font-size:1.1rem}
 .post-content{padding:0 1rem .5rem;font-size:.9rem;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.post-feeling{padding:0 1rem .4rem;font-size:.82rem;color:var(--text2);font-style:italic}
 .post-content .tag-mention{color:var(--blue);cursor:pointer;font-weight:500}
-.post-image{width:100%;max-height:400px;object-fit:cover;cursor:pointer}
-.post-session-card{margin:.25rem 1rem .5rem;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.65rem .75rem}
-.post-session-card .psc-title{font-family:var(--font-d);font-size:1.1rem;letter-spacing:.03em;color:var(--gold)}
-.post-session-card .psc-stats{font-size:.75rem;color:var(--text2);font-family:var(--font-m)}
+.post-image{width:100%;max-height:420px;object-fit:cover;cursor:pointer}
+.post-video{width:100%;max-height:420px;border-radius:0}
+.post-session-embed{margin:.25rem 1rem .5rem;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.75rem;position:relative;overflow:hidden}
+.pse-badge{position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:.6rem;font-family:'JetBrains Mono',monospace;font-weight:600;padding:.2rem .5rem;border-radius:0 0 0 8px;letter-spacing:.08em;text-transform:uppercase}
+.pse-date{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gold);letter-spacing:.03em}
+.pse-stats{display:flex;gap:1rem;margin:.4rem 0;font-size:.78rem;color:var(--text2);font-family:'JetBrains Mono',monospace}
+.pse-stats span{display:flex;align-items:center;gap:.25rem}
+.pse-notes{font-size:.82rem;color:var(--text2);margin-top:.35rem;white-space:pre-wrap}
+.pse-techs{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.4rem}
+.pse-subs{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.3rem}
 .post-actions{display:flex;border-top:1px solid var(--border);padding:.1rem .5rem}
-.post-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem;background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;font-weight:500;transition:.15s;border-radius:var(--radius-sm)}
+.post-action-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem;background:none;border:none;color:var(--text3);cursor:pointer;font-size:.8rem;font-weight:500;transition:.15s;border-radius:8px}
 .post-action-btn:hover{background:var(--bg3);color:var(--text2)}
 .post-action-btn.liked{color:var(--red)}
 .post-action-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
 .post-action-btn.liked svg{fill:var(--red);stroke:var(--red)}
 
-/* ── COMMENTS SECTION ── */
-.comments-section{border-top:1px solid var(--border);padding:.75rem 1rem;display:none}
-.comments-section.open{display:block}
-.comment-item{display:flex;gap:.5rem;margin-bottom:.65rem}
-.comment-body{flex:1;background:var(--bg3);border-radius:var(--radius-sm);padding:.45rem .65rem}
-.comment-author{font-size:.78rem;font-weight:600;cursor:pointer}.comment-author:hover{color:var(--red)}
-.comment-text{font-size:.82rem;color:var(--text2);line-height:1.4;white-space:pre-wrap}
-.comment-time{font-size:.65rem;color:var(--text3);margin-top:.15rem;font-family:var(--font-m)}
-.comment-input-row{display:flex;gap:.5rem;margin-top:.5rem}
-.comment-input-row input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:.45rem .75rem;color:var(--text);font-size:.82rem;outline:none}
+/* ── COMMENTS (auto-show) ── */
+.comments-section{border-top:1px solid var(--border);padding:.6rem 1rem}
+.comment-item{display:flex;gap:.5rem;margin-bottom:.55rem}
+.comment-body{flex:1;background:var(--bg3);border-radius:8px;padding:.4rem .6rem}
+.comment-author{font-size:.76rem;font-weight:600;cursor:pointer}.comment-author:hover{color:var(--red)}
+.comment-text{font-size:.8rem;color:var(--text2);line-height:1.35;white-space:pre-wrap}
+.comment-time{font-size:.62rem;color:var(--text3);margin-top:.1rem;font-family:'JetBrains Mono',monospace}
+.comment-input-row{display:flex;gap:.5rem;margin-top:.4rem}
+.comment-input-row input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:99px;padding:.4rem .7rem;color:var(--text);font-size:.8rem;outline:none}
 .comment-input-row input:focus{border-color:var(--red)}
-.comment-input-row button{background:var(--red);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.comment-input-row button{background:var(--red);color:#fff;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-/* ── CREATE POST ── */
-.create-post-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem;margin-bottom:1rem}
+/* ── CREATE POST / LOG SESSION ── */
+.create-post-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.85rem;margin-bottom:1rem}
 .create-post-row{display:flex;gap:.65rem;align-items:flex-start}
-.create-post-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.6rem .75rem;color:var(--text);font-size:.88rem;min-height:44px;resize:none;outline:none;font-family:var(--font-b);line-height:1.4}
+.create-post-input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:.6rem .75rem;color:var(--text);font-size:.88rem;min-height:44px;resize:none;outline:none;font-family:'DM Sans',sans-serif;line-height:1.4}
 .create-post-input:focus{border-color:var(--red)}
-.create-post-tools{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;padding-left:calc(40px + .65rem)}
-.create-post-tools button{background:none;border:1px solid var(--border2);color:var(--text3);border-radius:var(--radius-xs);padding:.35rem .6rem;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:.15s;font-family:var(--font-m)}
-.create-post-tools button:hover{border-color:var(--text3);color:var(--text2)}
-.create-post-tools button svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
-.create-post-submit{margin-left:auto !important;background:var(--red) !important;color:#fff !important;border-color:var(--red) !important;font-weight:600;font-family:var(--font-b) !important}
-.create-post-submit:disabled{opacity:.4}
-.post-image-preview{margin-top:.5rem;padding-left:calc(40px + .65rem);position:relative;display:none}
-.post-image-preview img{max-height:120px;border-radius:var(--radius-sm);border:1px solid var(--border2)}
-.post-image-preview .remove-img{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center}
-.tag-container{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem;padding-left:calc(40px + .65rem)}
+.cp-tools{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.cp-tools button{background:none;border:1px solid var(--border2);color:var(--text3);border-radius:6px;padding:.35rem .6rem;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:.15s;font-family:'JetBrains Mono',monospace}
+.cp-tools button:hover{border-color:var(--text3);color:var(--text2)}
+.cp-tools button.active-toggle{border-color:var(--red);color:var(--red);background:var(--red-glow)}
+.cp-tools svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.cp-submit{margin-left:auto !important;background:var(--red) !important;color:#fff !important;border-color:var(--red) !important;font-weight:600;font-family:'DM Sans',sans-serif !important}
+.cp-submit:disabled{opacity:.4}
+.media-preview{margin-top:.5rem;position:relative;display:none}
+.media-preview img,.media-preview video{max-height:120px;border-radius:8px;border:1px solid var(--border2)}
+.media-preview .remove-media{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+.tag-container{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.4rem}
 
-/* ── PROFILE PAGE ── */
-.profile-banner{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;margin-bottom:1rem;position:relative}
-.profile-avatar-wrap{display:flex;justify-content:center;margin-bottom:.75rem;position:relative}
-.profile-name{font-family:var(--font-d);font-size:2rem;letter-spacing:.03em;line-height:1}
-.profile-handle{color:var(--text3);font-size:.8rem;font-family:var(--font-m)}
+/* ── SESSION FORM (inline in create-post) ── */
+.session-fields{display:none;margin-top:.75rem;border-top:1px solid var(--border2);padding-top:.75rem}
+.session-fields.open{display:block}
+
+/* ── PROFILE ── */
+.profile-banner{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem 1rem;text-align:center;margin-bottom:1rem;position:relative}
+.profile-name{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:.03em;line-height:1}
+.profile-handle{color:var(--text3);font-size:.8rem;font-family:'JetBrains Mono',monospace}
 .profile-bio{color:var(--text2);font-size:.85rem;margin-top:.4rem;max-width:300px;margin-inline:auto}
 .profile-belt-row{display:flex;align-items:center;justify-content:center;gap:.4rem;margin-top:.5rem}
 .profile-stats-row{display:flex;justify-content:center;gap:1.5rem;margin-top:.85rem}
 .profile-stat{text-align:center}
-.profile-stat-val{font-family:var(--font-d);font-size:1.6rem;line-height:1}
-.profile-stat-label{font-size:.65rem;color:var(--text3);font-family:var(--font-m);letter-spacing:.08em;text-transform:uppercase}
+.profile-stat-val{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;line-height:1}
+.profile-stat-label{font-size:.65rem;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
 .profile-actions{display:flex;gap:.5rem;justify-content:center;margin-top:.85rem}
-.edit-profile-btn{position:absolute;top:.75rem;right:.75rem;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:var(--radius-sm);padding:.35rem .65rem;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.3rem}
+.edit-profile-btn{position:absolute;top:.75rem;right:.75rem;background:var(--bg4);border:1px solid var(--border2);color:var(--text2);border-radius:8px;padding:.35rem .65rem;font-size:.72rem;cursor:pointer;display:flex;align-items:center;gap:.3rem}
 .profile-tab-row{display:flex;border-bottom:1px solid var(--border2);margin-bottom:1rem}
 .profile-tab{flex:1;padding:.55rem;text-align:center;background:none;border:none;color:var(--text3);font-size:.8rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}
 .profile-tab.active{color:var(--red);border-bottom-color:var(--red)}
 
-/* ── FRIENDS PAGE ── */
+/* ── FRIENDS / SEARCH / NOTIFICATIONS ── */
 .search-bar{display:flex;gap:.5rem;margin-bottom:1rem}
-.search-bar input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:.55rem .75rem;color:var(--text);font-size:.88rem;outline:none}
+.search-bar input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:.55rem .75rem;color:var(--text);font-size:.88rem;outline:none}
 .search-bar input:focus{border-color:var(--red)}
-.friend-item{display:flex;align-items:center;gap:.65rem;padding:.65rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.5rem;cursor:pointer;transition:.15s}
+.friend-item{display:flex;align-items:center;gap:.65rem;padding:.65rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:.5rem;cursor:pointer;transition:.15s}
 .friend-item:hover{border-color:var(--border3)}
-.friend-info{flex:1;min-width:0}
-.friend-name{font-weight:600;font-size:.88rem}
-.friend-detail{font-size:.72rem;color:var(--text3);font-family:var(--font-m)}
+.friend-info{flex:1;min-width:0}.friend-name{font-weight:600;font-size:.88rem}.friend-detail{font-size:.72rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
 .friend-actions{display:flex;gap:.35rem}
-
-/* ── NOTIFICATION ITEMS ── */
-.notif-item{display:flex;align-items:center;gap:.65rem;padding:.7rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.4rem;cursor:pointer;transition:.15s}
+.notif-item{display:flex;align-items:center;gap:.65rem;padding:.7rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:.4rem;cursor:pointer;transition:.15s}
 .notif-item.unread{background:rgba(230,57,70,.04);border-color:rgba(230,57,70,.2)}
-.notif-text{flex:1;font-size:.82rem;color:var(--text2);line-height:1.3}
-.notif-text strong{color:var(--text);font-weight:600}
-.notif-time{font-size:.65rem;color:var(--text3);font-family:var(--font-m)}
+.notif-text{flex:1;font-size:.82rem;color:var(--text2);line-height:1.3}.notif-text strong{color:var(--text);font-weight:600}
+.notif-time{font-size:.65rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
 
-/* ── SESSION LOG FORM ── */
-.session-form{display:none}
-.session-form.open{display:block}
-.session-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.4rem;cursor:pointer}
+/* ── EXPLORE GALLERY ── */
+.explore-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.explore-tile{position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;background:var(--bg3)}
+.explore-tile img,.explore-tile video{width:100%;height:100%;object-fit:cover}
+.explore-tile .et-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:.6rem;opacity:0;transition:.2s;color:#fff;font-size:.85rem;font-weight:600}
+.explore-tile:hover .et-overlay{opacity:1}
+.explore-tile .et-session{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg3),var(--bg2));padding:.5rem;text-align:center}
+.explore-tile .et-session .es-emoji{font-size:1.8rem}
+.explore-tile .et-session .es-dur{font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gold)}
+.explore-tile .et-session .es-user{font-size:.62rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:.15rem}
+
+/* ── SESSION LIST (in Log tab) ── */
+.session-item{display:flex;align-items:center;gap:.5rem;padding:.6rem .75rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:.4rem;cursor:pointer}
 .session-item:hover{border-color:var(--border3)}
-.session-date{font-family:var(--font-m);font-size:.82rem;color:var(--gold);font-weight:600;min-width:80px}
-.session-info{flex:1}
-.session-title{font-size:.85rem;font-weight:500}
-.session-detail{font-size:.72rem;color:var(--text3);font-family:var(--font-m)}
-.session-privacy{font-size:.72rem;padding:.15rem .5rem;border-radius:99px;font-family:var(--font-m)}
+.session-date{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--gold);font-weight:600;min-width:80px}
+.session-info{flex:1}.session-title{font-size:.85rem;font-weight:500}.session-detail{font-size:.72rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.session-privacy{font-size:.72rem;padding:.15rem .5rem;border-radius:99px;font-family:'JetBrains Mono',monospace}
 .session-privacy.public{background:rgba(82,183,136,.1);color:var(--green-bright);border:1px solid var(--green-bright)}
 .session-privacy.private{background:rgba(90,90,90,.15);color:var(--text3);border:1px solid var(--border3)}
 
-/* ── TOGGLE SWITCH ── */
+/* ── TOGGLE ── */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
 .toggle-label{font-size:.85rem;color:var(--text2)}
 .toggle{position:relative;width:44px;height:24px;cursor:pointer}
@@ -214,49 +215,27 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(1
 .toggle input:checked+.toggle-track{background:var(--red);border-color:var(--red)}
 .toggle input:checked+.toggle-track::after{transform:translateX(20px);background:#fff}
 
-/* ── TECHNIQUE LIBRARY ── */
-.technique-category{margin-bottom:1rem}
-.technique-category-title{font-family:var(--font-d);font-size:1.3rem;letter-spacing:.04em;color:var(--gold);margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem}
-.technique-grid{display:flex;flex-wrap:wrap;gap:.3rem}
-
-/* ── MODAL ── */
+.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:.75rem;margin-bottom:.75rem}
+.chart-title{font-size:.65rem;font-family:'JetBrains Mono',monospace;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.5rem}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}.empty-state p{font-size:.85rem}
+.toast{position:fixed;top:1rem;right:1rem;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.65rem 1rem;border-radius:8px;font-size:.85rem;z-index:300;transform:translateY(-20px);opacity:0;transition:.3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}.toast.error{border-color:var(--red);background:rgba(230,57,70,.15)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);width:100%;max-width:440px;max-height:90vh;overflow-y:auto;padding:1.25rem}
-.modal-title{font-family:var(--font-d);font-size:1.6rem;letter-spacing:.03em;margin-bottom:1rem}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;padding:1.25rem;position:relative}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.03em;margin-bottom:1rem}
 .modal-close{position:absolute;top:.75rem;right:.75rem;background:none;border:none;color:var(--text3);font-size:1.3rem;cursor:pointer}
+.load-more-btn{display:block;width:100%;padding:.7rem;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:.85rem;font-weight:600;cursor:pointer;text-align:center;margin-top:.5rem}
+.load-more-btn:hover{border-color:var(--text3)}
 
-/* ── CHART ── */
-.chart-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem}
-.chart-title{font-size:.65rem;font-family:var(--font-m);letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:.5rem}
-
-/* ── EMPTY STATE ── */
-.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3)}
-.empty-state svg{width:48px;height:48px;stroke:var(--border3);margin-bottom:.75rem}
-.empty-state p{font-size:.85rem}
-
-/* ── TOAST ── */
-.toast{position:fixed;top:1rem;right:1rem;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:.65rem 1rem;border-radius:var(--radius-sm);font-size:.85rem;z-index:300;transform:translateY(-20px);opacity:0;transition:.3s;pointer-events:none}
-.toast.show{transform:translateY(0);opacity:1}
-.toast.error{border-color:var(--red);background:rgba(230,57,70,.15)}
-
-/* ── SCROLLBAR MOBILE ── */
-@media(max-width:600px){
-  .view{padding:1rem .75rem calc(var(--nav-h) + 1.5rem)}
-}
-
-/* ── SKELETON LOADING ── */
-.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--radius-sm)}
-@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* ── ANIMATIONS ── */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .fade-in{animation:fadeIn .3s ease-out}
+@media(max-width:600px){.view{padding:1rem .75rem calc(68px + 1.5rem)}}
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- ════ AUTH SCREEN ════ -->
+  <!-- AUTH -->
   <div id="auth-screen">
     <div class="auth-box">
       <div class="auth-logo">TATAMI</div>
@@ -266,64 +245,59 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(1
         <button class="auth-tab" onclick="showAuthTab('register')">Sign Up</button>
       </div>
       <div id="auth-error" class="auth-error"></div>
-      <!-- LOGIN -->
       <form id="login-form" class="auth-form active" onsubmit="return handleLogin(event)">
         <div class="field"><label>Username or Email</label><input name="login" required autocomplete="username"></div>
         <div class="field"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
         <button class="btn-primary" type="submit">Sign In</button>
       </form>
-      <!-- REGISTER -->
       <form id="register-form" class="auth-form" onsubmit="return handleRegister(event)">
         <div class="field"><label>Username</label><input name="username" required minlength="3" pattern="[a-zA-Z0-9_]+" autocomplete="username"></div>
         <div class="field"><label>Display Name</label><input name="display_name" required></div>
         <div class="field"><label>Email</label><input name="email" type="email" required autocomplete="email"></div>
-        <div class="field"><label>Password (min 6 chars)</label><input name="password" type="password" required minlength="6" autocomplete="new-password"></div>
+        <div class="field"><label>Password (min 6)</label><input name="password" type="password" required minlength="6" autocomplete="new-password"></div>
         <button class="btn-primary" type="submit">Create Account</button>
       </form>
     </div>
   </div>
 
-  <!-- ════ MAIN APP (hidden until auth) ════ -->
+  <!-- MAIN -->
   <div id="main-app" style="display:none">
-    <!-- ═══ FEED ═══ -->
+    <!-- FEED -->
     <div id="view-feed" class="view active">
       <div class="page-header">
         <div><div class="page-title">Feed</div><div class="page-sub" id="feed-greeting"></div></div>
-        <button class="btn-secondary btn-small" onclick="loadFeed()" title="Refresh">↻</button>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn-secondary btn-small" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">🌓</button>
+          <button class="btn-secondary btn-small" onclick="loadFeed(true)" title="Refresh">↻</button>
+        </div>
       </div>
-      <div class="create-post-box">
+      <!-- CREATE POST / LOG SESSION (unified) -->
+      <div class="create-post-box" id="create-box">
         <div class="create-post-row">
           <div class="avatar" id="feed-avatar"></div>
-          <textarea class="create-post-input" id="post-content" placeholder="Share a training update..." rows="2"></textarea>
+          <textarea class="create-post-input" id="cp-content" placeholder="Share a training update..." rows="2" oninput="updateSubmitBtn()"></textarea>
         </div>
-        <div id="post-image-preview" class="post-image-preview"><img id="post-preview-img"><button class="remove-img" onclick="removePostImage()">×</button></div>
-        <div id="post-tag-container" class="tag-container"></div>
-        <div class="create-post-tools">
-          <button onclick="document.getElementById('post-image-input').click()"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> Photo</button>
-          <input type="file" id="post-image-input" accept="image/*" style="display:none" onchange="handlePostImage(this)">
-          <button onclick="openSessionPicker()"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg> Session</button>
+        <div id="cp-media-preview" class="media-preview"></div>
+        <div id="cp-tag-container" class="tag-container"></div>
+        <div class="cp-tools">
+          <button onclick="document.getElementById('cp-file-input').click()"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> Photo/Video</button>
+          <input type="file" id="cp-file-input" accept="image/*,video/*" style="display:none" onchange="handleMediaUpload(this)">
           <button onclick="openTagPicker()"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg> Tag</button>
-          <button class="create-post-submit" id="post-submit-btn" onclick="submitPost()" disabled>Post</button>
+          <button id="cp-session-toggle" onclick="toggleSessionFields()"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg> Log Session</button>
+          <button class="cp-submit" id="cp-submit" onclick="submitUnifiedPost()" disabled>Post</button>
         </div>
-      </div>
-      <div id="feed-list"></div>
-    </div>
-
-    <!-- ═══ SESSIONS ═══ -->
-    <div id="view-sessions" class="view">
-      <div class="page-header">
-        <div><div class="page-title">Training Log</div><div class="page-sub">your diary</div></div>
-        <button class="btn-secondary btn-small" onclick="toggleSessionForm()">+ Log Session</button>
-      </div>
-      <div id="session-form-wrap" class="session-form">
-        <div class="card">
-          <div class="field"><label>Date</label><input type="date" id="sf-date"></div>
+        <!-- SESSION FIELDS (hidden until toggled) -->
+        <div class="session-fields" id="cp-session-fields">
           <div class="grid2">
+            <div class="field"><label>Date</label><input type="date" id="sf-date"></div>
             <div class="field"><label>Duration (min)</label><input type="number" id="sf-duration" min="0" value="60"></div>
-            <div class="field"><label>Sparring Rounds</label><input type="number" id="sf-sparring" min="0" value="0"></div>
           </div>
-          <div class="field"><label>Drills (min)</label><input type="number" id="sf-drills" min="0" value="0"></div>
-          <div class="field"><label>Notes</label><textarea id="sf-notes" placeholder="How was the session?"></textarea></div>
+          <div class="grid2">
+            <div class="field"><label>Sparring Rounds</label><input type="number" id="sf-sparring" min="0" value="0"></div>
+            <div class="field"><label>Drills (min)</label><input type="number" id="sf-drills" min="0" value="0"></div>
+          </div>
+          <div class="field"><label>How did you feel?</label><input type="text" id="sf-feeling" placeholder="e.g. 🔥 Energised, 😤 Frustrated, 💪 Strong..."></div>
+          <div class="field"><label>Session Notes</label><textarea id="sf-notes" placeholder="What did you work on? Any breakthroughs?"></textarea></div>
           <div class="field"><label>Techniques Practiced</label>
             <select id="sf-tech-select" onchange="addSessionTech(this.value);this.value=''"><option value="">Choose technique...</option></select>
             <div id="sf-tech-tags" style="margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem"></div>
@@ -337,1030 +311,227 @@ nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:rgba(1
             <div id="sf-sub-tags" style="margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem"></div>
           </div>
           <div class="toggle-row">
-            <span class="toggle-label">Share to feed (public)?</span>
-            <label class="toggle"><input type="checkbox" id="sf-public"><span class="toggle-track"></span></label>
-          </div>
-          <div style="display:flex;gap:.5rem">
-            <button class="btn-primary" style="flex:1" onclick="saveSession()">Save Session</button>
-            <button class="btn-secondary" onclick="cancelSessionForm()">Cancel</button>
+            <span class="toggle-label">Public (show on feed)?</span>
+            <label class="toggle"><input type="checkbox" id="sf-public" checked><span class="toggle-track"></span></label>
           </div>
         </div>
+      </div>
+      <div id="feed-list"></div>
+      <button class="load-more-btn" id="feed-load-more" style="display:none" onclick="loadMoreFeed()">Load more</button>
+    </div>
+
+    <!-- LOG (personal session history) -->
+    <div id="view-log" class="view">
+      <div class="page-header">
+        <div><div class="page-title">Training Log</div><div class="page-sub">your diary</div></div>
       </div>
       <div id="my-sessions-stats" class="grid3" style="margin-bottom:1rem"></div>
       <div id="session-chart-wrap" class="chart-wrap" style="display:none"><div class="chart-title">Sessions This Month</div><canvas id="session-chart" height="160"></canvas></div>
       <div id="sessions-list"></div>
     </div>
 
-    <!-- ═══ TECHNIQUES ═══ -->
-    <div id="view-techniques" class="view">
+    <!-- EXPLORE (replaces technique library — Instagram-style gallery) -->
+    <div id="view-explore" class="view">
       <div class="page-header">
-        <div><div class="page-title">Technique Library</div><div class="page-sub">submissions · guards · passes</div></div>
-        <button class="btn-secondary btn-small" onclick="openSubmitTechModal()">+ Submit</button>
+        <div><div class="page-title">Explore</div><div class="page-sub">community training moments</div></div>
       </div>
-      <div class="search-bar" style="margin-bottom:1rem">
-        <input type="text" id="tech-search" placeholder="Search techniques..." oninput="filterTechniques(this.value)">
-      </div>
-      <div id="techniques-list"></div>
+      <div id="explore-grid" class="explore-grid"></div>
+      <button class="load-more-btn" id="explore-load-more" style="display:none" onclick="loadMoreExplore()">Load more</button>
     </div>
 
-    <!-- ═══ FRIENDS ═══ -->
+    <!-- FRIENDS -->
     <div id="view-friends" class="view">
-      <div class="page-header">
-        <div><div class="page-title">Training Partners</div><div class="page-sub">find your crew</div></div>
-      </div>
-      <div class="search-bar">
-        <input type="text" id="friend-search" placeholder="Search users..." oninput="debounceSearch(this.value)">
-      </div>
+      <div class="page-header"><div><div class="page-title">Friends</div><div class="page-sub">find your crew</div></div></div>
+      <div class="search-bar"><input type="text" id="friend-search" placeholder="Search users..." oninput="debounceSearch(this.value)"></div>
       <div id="search-results" style="margin-bottom:1rem"></div>
       <div id="pending-requests" style="margin-bottom:1rem"></div>
       <div id="friends-list"></div>
     </div>
 
-    <!-- ═══ PROFILE ═══ -->
-    <div id="view-profile" class="view">
-      <div id="profile-content"></div>
-    </div>
-
-    <!-- ═══ NOTIFICATIONS ═══ -->
+    <!-- NOTIFICATIONS -->
     <div id="view-notifications" class="view">
-      <div class="page-header">
-        <div><div class="page-title">Notifications</div></div>
-        <button class="btn-secondary btn-small" onclick="markAllRead()">Mark all read</button>
-      </div>
+      <div class="page-header"><div><div class="page-title">Notifications</div></div><button class="btn-secondary btn-small" onclick="markAllRead()">Mark all read</button></div>
       <div id="notif-list"></div>
     </div>
 
-    <!-- NAV BAR -->
+    <!-- PROFILE -->
+    <div id="view-profile" class="view"><div id="profile-content"></div></div>
+
     <nav>
       <button class="nav-btn active" data-view="feed" onclick="switchView('feed')">
-        <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Feed
+        <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Feed
       </button>
-      <button class="nav-btn" data-view="sessions" onclick="switchView('sessions')">
-        <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-        Log
+      <button class="nav-btn" data-view="log" onclick="switchView('log')">
+        <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>Log
       </button>
-      <button class="nav-btn" data-view="techniques" onclick="switchView('techniques')">
-        <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-        Library
+      <button class="nav-btn" data-view="explore" onclick="switchView('explore')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Explore
       </button>
       <button class="nav-btn" data-view="friends" onclick="switchView('friends')">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-        <span class="nav-badge" id="badge-friends">0</span>
-        Buddies
+        <span class="nav-badge" id="badge-friends">0</span>Friends
       </button>
       <button class="nav-btn" data-view="notifications" onclick="switchView('notifications')">
         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span class="nav-badge" id="badge-notif">0</span>
-        Alerts
+        <span class="nav-badge" id="badge-notif">0</span>Notifications
       </button>
       <button class="nav-btn" data-view="profile" onclick="switchView('profile');loadMyProfile()">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Me
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me
       </button>
     </nav>
   </div>
 </div>
-
-<!-- Toast -->
 <div id="toast" class="toast"></div>
-
-<!-- Modal -->
-<div id="modal" class="modal-overlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal" style="position:relative">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div id="modal-content"></div>
-  </div>
-</div>
+<div id="modal" class="modal-overlay" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="modal-close" onclick="closeModal()">✕</button><div id="modal-content"></div></div></div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-//  STATE & CONFIG
-// ══════════════════════════════════════════════════════════════════════════════
-const API = '';
-let TOKEN = localStorage.getItem('tatami_token') || '';
-let ME = null;
-let allTechniques = [];
-let currentSessionTechs = [];
-let currentSessionSubs = [];
-let currentPostSessionId = null;
-let currentPostTaggedUsers = [];
-let postImageUrl = '';
-let editingSessionId = null;
-let sessionChart = null;
-let searchTimeout = null;
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  API HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-async function api(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json' };
-  if (TOKEN) headers['Authorization'] = `Bearer ${TOKEN}`;
-  if (opts.admin) headers['x-admin-token'] = 'tatami-admin-2024';
-  try {
-    const res = await fetch(API + path, {
-      method: opts.method || 'GET',
-      headers,
-      body: opts.body ? JSON.stringify(opts.body) : undefined
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Request failed');
-    return data;
-  } catch (e) {
-    if (e.message === 'Invalid or expired token') { logout(); }
-    throw e;
-  }
-}
-
-async function uploadFile(path, file, fieldName = 'image') {
-  const form = new FormData();
-  form.append(fieldName, file);
-  const res = await fetch(API + path, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${TOKEN}` },
-    body: form
-  });
-  return res.json();
-}
-
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-function timeAgo(d) {
-  const s = Math.floor((Date.now() - new Date(d + (d.includes('Z') ? '' : 'Z')).getTime()) / 1000);
-  if (s < 60) return 'just now';
-  if (s < 3600) return Math.floor(s/60) + 'm';
-  if (s < 86400) return Math.floor(s/3600) + 'h';
-  if (s < 604800) return Math.floor(s/86400) + 'd';
-  return new Date(d).toLocaleDateString('en-GB', { day:'numeric', month:'short' });
-}
-
-function beltClass(b) { return 'belt-' + (b||'white').replace(/\s/g,'-').toLowerCase(); }
-function avatarHTML(user, cls = '') {
-  const c = cls ? ` ${cls}` : '';
-  if (user.avatar_url) return `<div class="avatar${c}"><img src="${user.avatar_url}" alt=""></div>`;
-  const init = (user.display_name || user.username || '?')[0].toUpperCase();
-  return `<div class="avatar${c}">${init}</div>`;
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  AUTH
-// ══════════════════════════════════════════════════════════════════════════════
-function showAuthTab(tab) {
-  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'?0:1)===i));
-  document.getElementById('login-form').classList.toggle('active', tab==='login');
-  document.getElementById('register-form').classList.toggle('active', tab==='register');
-  document.getElementById('auth-error').style.display = 'none';
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg; el.style.display = 'block';
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  try {
-    const r = await api('/api/auth/login', { method:'POST', body:{ login:fd.get('login'), password:fd.get('password') }});
-    TOKEN = r.token; localStorage.setItem('tatami_token', TOKEN);
-    await initApp();
-  } catch(e) { showAuthError(e.message); }
-  return false;
-}
-
-async function handleRegister(e) {
-  e.preventDefault();
-  const fd = new FormData(e.target);
-  try {
-    const r = await api('/api/auth/register', { method:'POST', body:{
-      username:fd.get('username'), email:fd.get('email'), password:fd.get('password'), display_name:fd.get('display_name')
-    }});
-    TOKEN = r.token; localStorage.setItem('tatami_token', TOKEN);
-    await initApp();
-  } catch(e) { showAuthError(e.message); }
-  return false;
-}
-
-function logout() {
-  api('/api/auth/logout', { method:'POST' }).catch(()=>{});
-  TOKEN = ''; ME = null;
-  localStorage.removeItem('tatami_token');
-  document.getElementById('auth-screen').style.display = 'flex';
-  document.getElementById('main-app').style.display = 'none';
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════════════════════════════════
-async function initApp() {
-  try {
-    ME = await api('/api/auth/me');
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = '';
-    document.getElementById('feed-greeting').textContent = `oss, ${ME.display_name || ME.username}`;
-    document.getElementById('feed-avatar').innerHTML = avatarHTML(ME).replace(/<div class="avatar">/, '').replace(/<\/div>$/, '');
-    if (ME.avatar_url) document.getElementById('feed-avatar').innerHTML = `<img src="${ME.avatar_url}" alt="">`;
-    else document.getElementById('feed-avatar').textContent = (ME.display_name||ME.username||'?')[0].toUpperCase();
-
-    // Load core data
-    allTechniques = await api('/api/techniques');
-    populateTechSelects();
-    loadFeed();
-    loadSessions();
-    loadFriendsBadge();
-    loadNotifBadge();
-  } catch(e) {
-    TOKEN = ''; localStorage.removeItem('tatami_token');
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('main-app').style.display = 'none';
-  }
-}
-
-function switchView(name) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.view === name));
-  if (name === 'friends') { loadFriends(); loadPendingRequests(); }
-  if (name === 'notifications') { loadNotifications(); }
-  if (name === 'sessions') { loadSessions(); }
-  if (name === 'techniques') { renderTechniques(); }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  FEED
-// ══════════════════════════════════════════════════════════════════════════════
-async function loadFeed() {
-  const posts = await api('/api/feed');
-  const el = document.getElementById('feed-list');
-  if (!posts.length) {
-    el.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><p>Your feed is empty.<br>Add some training partners to see their sessions!</p></div>`;
-    return;
-  }
-  el.innerHTML = posts.map(p => renderPostCard(p)).join('');
-}
-
-function renderPostCard(p) {
-  const sessionHTML = p.session_id ? renderSessionEmbed(p) : '';
-  const imgHTML = p.image_url ? `<img class="post-image" src="${p.image_url}" onclick="window.open('${p.image_url}','_blank')">` : '';
-  const content = p.content ? renderPostContent(p.content, p.tagged_users) : '';
-  const isOwn = ME && p.user_id === ME.id;
-
-  return `<div class="post-card fade-in" id="post-${p.id}">
-    <div class="post-header">
-      ${avatarHTML(p)}
-      <div class="post-user-info">
-        <div class="post-username" onclick="viewProfile('${p.user_id}')">${p.display_name||p.username}</div>
-        <div class="post-meta"><span class="belt-dot ${beltClass(p.belt)}"></span>${p.belt||'white'} belt · ${timeAgo(p.created_at)}</div>
-      </div>
-      ${isOwn ? `<button class="post-delete" onclick="deletePost('${p.id}')" title="Delete">✕</button>` : ''}
-    </div>
-    ${content ? `<div class="post-content">${content}</div>` : ''}
-    ${imgHTML}
-    ${sessionHTML}
-    <div class="post-actions">
-      <button class="post-action-btn ${p.user_liked?'liked':''}" onclick="toggleLike('${p.id}',this)">
-        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-        <span>${p.like_count||0}</span>
-      </button>
-      <button class="post-action-btn" onclick="toggleComments('${p.id}')">
-        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>${p.comment_count||0}</span>
-      </button>
-    </div>
-    <div class="comments-section" id="comments-${p.id}"></div>
-  </div>`;
-}
-
-function renderPostContent(text, taggedUsers) {
-  let html = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  html = html.replace(/@(\w+)/g, '<span class="tag-mention" onclick="findAndViewUser(\'$1\')">@$1</span>');
-  return html;
-}
-
-function renderSessionEmbed(p) {
-  // Session data is embedded via session_id reference; we show a simple card
-  return `<div class="post-session-card">
-    <div class="psc-title">🥋 Training Session</div>
-    <div class="psc-stats">Session shared · tap profile to view details</div>
-  </div>`;
-}
-
-async function submitPost() {
-  const content = document.getElementById('post-content').value.trim();
-  if (!content && !postImageUrl && !currentPostSessionId) return;
-
-  const taggedIds = currentPostTaggedUsers.map(u => u.id);
-  const tagMentions = currentPostTaggedUsers.map(u => '@' + u.username).join(' ');
-  const fullContent = content + (tagMentions ? (content ? '\n' : '') + tagMentions : '');
-
-  try {
-    await api('/api/posts', { method:'POST', body:{
-      content: fullContent,
-      image_url: postImageUrl,
-      session_id: currentPostSessionId,
-      tagged_users: taggedIds,
-      is_public: 1
-    }});
-    document.getElementById('post-content').value = '';
-    postImageUrl = '';
-    currentPostSessionId = null;
-    currentPostTaggedUsers = [];
-    document.getElementById('post-image-preview').style.display = 'none';
-    document.getElementById('post-tag-container').innerHTML = '';
-    document.getElementById('post-submit-btn').disabled = true;
-    showToast('Posted! 🤙');
-    loadFeed();
-  } catch(e) { showToast(e.message, true); }
-}
-
-document.getElementById('post-content').addEventListener('input', function() {
-  document.getElementById('post-submit-btn').disabled = !this.value.trim() && !postImageUrl && !currentPostSessionId;
-});
-
-async function handlePostImage(input) {
-  if (!input.files[0]) return;
-  try {
-    const r = await uploadFile('/api/posts/upload-image', input.files[0]);
-    postImageUrl = r.image_url;
-    document.getElementById('post-preview-img').src = r.image_url;
-    document.getElementById('post-image-preview').style.display = 'block';
-    document.getElementById('post-submit-btn').disabled = false;
-  } catch(e) { showToast('Upload failed', true); }
-  input.value = '';
-}
-
-function removePostImage() {
-  postImageUrl = '';
-  document.getElementById('post-image-preview').style.display = 'none';
-}
-
-async function toggleLike(postId, btn) {
-  try {
-    const r = await api(`/api/posts/${postId}/like`, { method:'POST' });
-    btn.classList.toggle('liked', r.liked);
-    const countEl = btn.querySelector('span');
-    countEl.textContent = parseInt(countEl.textContent) + (r.liked ? 1 : -1);
-  } catch(e) {}
-}
-
-async function deletePost(postId) {
-  if (!confirm('Delete this post?')) return;
-  await api(`/api/posts/${postId}`, { method:'DELETE' });
-  document.getElementById('post-' + postId)?.remove();
-  showToast('Post deleted');
-}
-
-async function toggleComments(postId) {
-  const section = document.getElementById('comments-' + postId);
-  if (section.classList.contains('open')) { section.classList.remove('open'); return; }
-  section.classList.add('open');
-  section.innerHTML = '<div style="padding:.5rem;color:var(--text3);font-size:.8rem">Loading...</div>';
-  const comments = await api(`/api/posts/${postId}/comments`);
-  section.innerHTML = comments.map(c => `
-    <div class="comment-item">
-      ${avatarHTML(c, 'avatar-sm')}
-      <div class="comment-body">
-        <div class="comment-author" onclick="viewProfile('${c.user_id}')">${c.display_name||c.username} <span class="belt-dot ${beltClass(c.belt)}" style="width:7px;height:7px"></span></div>
-        <div class="comment-text">${c.content.replace(/</g,'&lt;')}</div>
-        <div class="comment-time">${timeAgo(c.created_at)}</div>
-      </div>
-    </div>
-  `).join('') + `
-    <div class="comment-input-row">
-      <input id="ci-${postId}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')postComment('${postId}')">
-      <button onclick="postComment('${postId}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
-    </div>`;
-}
-
-async function postComment(postId) {
-  const input = document.getElementById('ci-' + postId);
-  const content = input.value.trim();
-  if (!content) return;
-  try {
-    await api(`/api/posts/${postId}/comments`, { method:'POST', body:{ content }});
-    input.value = '';
-    toggleComments(postId); // close
-    toggleComments(postId); // reopen to refresh
-    // Update comment count in post
-    loadFeed();
-  } catch(e) { showToast(e.message, true); }
-}
-
-function openSessionPicker() {
-  openModal('Attach Session', `
-    <p style="color:var(--text2);font-size:.85rem;margin-bottom:1rem">Select a session to share with your post:</p>
-    <div id="modal-session-pick" style="max-height:300px;overflow-y:auto">Loading...</div>
-  `);
-  api('/api/sessions').then(sessions => {
-    const el = document.getElementById('modal-session-pick');
-    if (!sessions.length) { el.innerHTML = '<p style="color:var(--text3)">No sessions logged yet.</p>'; return; }
-    el.innerHTML = sessions.slice(0, 15).map(s => `
-      <div class="session-item" onclick="pickSession('${s.id}','${s.date}',${s.duration});closeModal()">
-        <div class="session-date">${s.date}</div>
-        <div class="session-info">
-          <div class="session-title">${s.duration}min · ${s.sparring||0} rounds</div>
-        </div>
-      </div>`).join('');
-  });
-}
-
-function pickSession(id, date, dur) {
-  currentPostSessionId = id;
-  document.getElementById('post-submit-btn').disabled = false;
-  showToast(`Session attached (${date})`);
-}
-
-function openTagPicker() {
-  openModal('Tag Training Partners', `
-    <div class="search-bar" style="margin-bottom:1rem"><input type="text" id="modal-tag-search" placeholder="Search friends..." oninput="searchForTag(this.value)"></div>
-    <div id="modal-tag-results"></div>
-  `);
-  // Show friends by default
-  api('/api/friends').then(friends => {
-    const el = document.getElementById('modal-tag-results');
-    el.innerHTML = friends.map(f => `
-      <div class="friend-item" onclick="addTag(${JSON.stringify(f).replace(/"/g,'&quot;')})">
-        ${avatarHTML(f, 'avatar-sm')}
-        <div class="friend-info"><div class="friend-name">${f.display_name||f.username}</div><div class="friend-detail">@${f.username}</div></div>
-      </div>`).join('');
-  });
-}
-
-async function searchForTag(q) {
-  if (q.length < 2) return;
-  const results = await api(`/api/users/search?q=${encodeURIComponent(q)}`);
-  document.getElementById('modal-tag-results').innerHTML = results.map(f => `
-    <div class="friend-item" onclick="addTag(${JSON.stringify(f).replace(/"/g,'&quot;')})">
-      ${avatarHTML(f, 'avatar-sm')}
-      <div class="friend-info"><div class="friend-name">${f.display_name||f.username}</div><div class="friend-detail">@${f.username}</div></div>
-    </div>`).join('');
-}
-
-function addTag(user) {
-  if (currentPostTaggedUsers.find(u => u.id === user.id)) return;
-  currentPostTaggedUsers.push(user);
-  renderTagContainer();
-  document.getElementById('post-submit-btn').disabled = false;
-}
-
-function removeTag(userId) {
-  currentPostTaggedUsers = currentPostTaggedUsers.filter(u => u.id !== userId);
-  renderTagContainer();
-}
-
-function renderTagContainer() {
-  document.getElementById('post-tag-container').innerHTML = currentPostTaggedUsers.map(u =>
-    `<span class="tag blue">@${u.username} <span style="cursor:pointer;margin-left:2px" onclick="removeTag('${u.id}')">✕</span></span>`
-  ).join('');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  SESSIONS
-// ══════════════════════════════════════════════════════════════════════════════
-async function loadSessions() {
-  const sessions = await api('/api/sessions');
-  renderSessionStats(sessions);
-  renderSessionChart(sessions);
-  const el = document.getElementById('sessions-list');
-  if (!sessions.length) {
-    el.innerHTML = '<div class="empty-state"><p>No sessions logged yet. Start training! 🥋</p></div>';
-    return;
-  }
-  el.innerHTML = sessions.map(s => `
-    <div class="session-item" onclick="viewSession('${s.id}')">
-      <div class="session-date">${s.date}</div>
-      <div class="session-info">
-        <div class="session-title">${s.duration}min · ${s.sparring||0} rounds${s.techniques?.length ? ' · ' + s.techniques.length + ' techs' : ''}</div>
-        <div class="session-detail">${s.notes ? s.notes.slice(0,60) + (s.notes.length>60?'...':'') : 'No notes'}</div>
-      </div>
-      <span class="session-privacy ${s.is_public ? 'public' : 'private'}">${s.is_public ? '👁 public' : '🔒'}</span>
-    </div>`).join('');
-}
-
-function renderSessionStats(sessions) {
-  const total = sessions.length;
-  const totalMin = sessions.reduce((a,s) => a + s.duration, 0);
-  const totalSpar = sessions.reduce((a,s) => a + (s.sparring||0), 0);
-  document.getElementById('my-sessions-stats').innerHTML = `
-    <div class="card"><div class="card-label">Sessions</div><div class="card-val red">${total}</div></div>
-    <div class="card"><div class="card-label">Hours</div><div class="card-val">${(totalMin/60).toFixed(1)}</div></div>
-    <div class="card"><div class="card-label">Rounds</div><div class="card-val">${totalSpar}</div></div>`;
-}
-
-function renderSessionChart(sessions) {
-  const wrap = document.getElementById('session-chart-wrap');
-  if (sessions.length < 2) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  const last30 = sessions.filter(s => {
-    const d = new Date(s.date);
-    return d >= new Date(Date.now() - 30*86400000);
-  }).reverse();
-  if (sessionChart) sessionChart.destroy();
-  sessionChart = new Chart(document.getElementById('session-chart'), {
-    type:'bar',
-    data:{ labels: last30.map(s=>s.date.slice(5)), datasets:[{ label:'Minutes', data:last30.map(s=>s.duration), backgroundColor:'rgba(230,57,70,.6)', borderRadius:4 }] },
-    options:{ responsive:true, plugins:{ legend:{ display:false }}, scales:{ x:{ ticks:{ color:'#5c5650',font:{size:10,family:'JetBrains Mono'}},grid:{display:false}}, y:{ ticks:{ color:'#5c5650',font:{size:10}},grid:{color:'rgba(50,50,50,.5)'}}}}
-  });
-}
-
-function toggleSessionForm() {
-  editingSessionId = null;
-  currentSessionTechs = [];
-  currentSessionSubs = [];
-  const el = document.getElementById('session-form-wrap');
-  el.classList.toggle('open');
-  if (el.classList.contains('open')) {
-    document.getElementById('sf-date').value = new Date().toISOString().slice(0,10);
-    document.getElementById('sf-duration').value = 60;
-    document.getElementById('sf-sparring').value = 0;
-    document.getElementById('sf-drills').value = 0;
-    document.getElementById('sf-notes').value = '';
-    document.getElementById('sf-public').checked = false;
-    renderSessionFormTags();
-  }
-}
-
-function cancelSessionForm() {
-  document.getElementById('session-form-wrap').classList.remove('open');
-}
-
-function populateTechSelects() {
-  const s1 = document.getElementById('sf-tech-select');
-  const s2 = document.getElementById('sf-sub-tech');
-  const subTechs = allTechniques.filter(t => t.category === 'submission');
-  s1.innerHTML = '<option value="">Choose technique...</option>' + allTechniques.map(t => `<option value="${t.name}">${t.name} (${t.category})</option>`).join('');
-  s2.innerHTML = '<option value="">Technique...</option>' + subTechs.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
-}
-
-function addSessionTech(name) {
-  if (!name || currentSessionTechs.includes(name)) return;
-  currentSessionTechs.push(name);
-  renderSessionFormTags();
-}
-
-function removeSessionTech(name) {
-  currentSessionTechs = currentSessionTechs.filter(t => t !== name);
-  renderSessionFormTags();
-}
-
-function addSessionSub() {
-  const tech = document.getElementById('sf-sub-tech').value;
-  const role = document.getElementById('sf-sub-role').value;
-  if (!tech) return;
-  currentSessionSubs.push({ technique: tech, role });
-  renderSessionFormTags();
-}
-
-function removeSessionSub(i) {
-  currentSessionSubs.splice(i, 1);
-  renderSessionFormTags();
-}
-
-function renderSessionFormTags() {
-  document.getElementById('sf-tech-tags').innerHTML = currentSessionTechs.map(t =>
-    `<span class="tag gold">${t} <span style="cursor:pointer" onclick="removeSessionTech('${t}')">✕</span></span>`).join('');
-  document.getElementById('sf-sub-tags').innerHTML = currentSessionSubs.map((s,i) =>
-    `<span class="tag ${s.role==='gave'?'green':'red'}">${s.technique} (${s.role==='gave'?'submitted':'tapped'}) <span style="cursor:pointer" onclick="removeSessionSub(${i})">✕</span></span>`).join('');
-}
-
-async function saveSession() {
-  const data = {
-    date: document.getElementById('sf-date').value,
-    duration: parseInt(document.getElementById('sf-duration').value) || 0,
-    sparring: parseInt(document.getElementById('sf-sparring').value) || 0,
-    drills: parseInt(document.getElementById('sf-drills').value) || 0,
-    notes: document.getElementById('sf-notes').value,
-    techniques: currentSessionTechs,
-    submissions_log: currentSessionSubs,
-    is_public: document.getElementById('sf-public').checked ? 1 : 0
-  };
-  if (!data.date || !data.duration) { showToast('Date and duration required', true); return; }
-  try {
-    if (editingSessionId) {
-      await api(`/api/sessions/${editingSessionId}`, { method:'PUT', body: data });
-      showToast('Session updated! ✅');
-    } else {
-      await api('/api/sessions', { method:'POST', body: data });
-      showToast('Session logged! 🥋');
-    }
-    cancelSessionForm();
-    loadSessions();
-  } catch(e) { showToast(e.message, true); }
-}
-
-function viewSession(id) {
-  api('/api/sessions').then(sessions => {
-    const s = sessions.find(x => x.id === id);
-    if (!s) return;
-    const techHTML = s.techniques?.length ? s.techniques.map(t => `<span class="tag gold">${t}</span>`).join('') : '<span style="color:var(--text3);font-size:.8rem">None recorded</span>';
-    const subHTML = s.submissions_log?.length ? s.submissions_log.map(x =>
-      `<span class="tag ${x.role==='gave'?'green':'red'}">${x.technique} (${x.role==='gave'?'✓ submitted':'✗ tapped'})</span>`
-    ).join('') : '<span style="color:var(--text3);font-size:.8rem">None recorded</span>';
-    openModal('Session Details', `
-      <div style="margin-bottom:1rem">
-        <div style="font-family:var(--font-d);font-size:1.4rem;color:var(--gold)">${s.date}</div>
-        <div class="grid3" style="margin:.75rem 0">
-          <div><div class="card-label">Duration</div><div style="font-size:1.1rem;font-weight:600">${s.duration}min</div></div>
-          <div><div class="card-label">Sparring</div><div style="font-size:1.1rem;font-weight:600">${s.sparring} rnds</div></div>
-          <div><div class="card-label">Drills</div><div style="font-size:1.1rem;font-weight:600">${s.drills}min</div></div>
-        </div>
-        ${s.notes ? `<div class="card-label">Notes</div><p style="font-size:.85rem;color:var(--text2);margin-bottom:.75rem;white-space:pre-wrap">${s.notes}</p>` : ''}
-        <div class="card-label">Techniques</div><div style="margin:.3rem 0 .75rem;display:flex;flex-wrap:wrap;gap:.3rem">${techHTML}</div>
-        <div class="card-label">Submissions</div><div style="margin:.3rem 0 .75rem;display:flex;flex-wrap:wrap;gap:.3rem">${subHTML}</div>
-        <div style="font-size:.72rem;color:var(--text3)">${s.is_public ? '👁 Public' : '🔒 Private'}</div>
-      </div>
-      <div style="display:flex;gap:.5rem">
-        <button class="btn-secondary" style="flex:1" onclick="editSession('${s.id}');closeModal()">Edit</button>
-        <button class="btn-secondary btn-danger" onclick="deleteSessionConfirm('${s.id}')">Delete</button>
-      </div>
-    `);
-  });
-}
-
-function editSession(id) {
-  api('/api/sessions').then(sessions => {
-    const s = sessions.find(x => x.id === id);
-    if (!s) return;
-    editingSessionId = id;
-    currentSessionTechs = s.techniques || [];
-    currentSessionSubs = s.submissions_log || [];
-    document.getElementById('session-form-wrap').classList.add('open');
-    document.getElementById('sf-date').value = s.date;
-    document.getElementById('sf-duration').value = s.duration;
-    document.getElementById('sf-sparring').value = s.sparring;
-    document.getElementById('sf-drills').value = s.drills;
-    document.getElementById('sf-notes').value = s.notes;
-    document.getElementById('sf-public').checked = !!s.is_public;
-    renderSessionFormTags();
-  });
-}
-
-async function deleteSessionConfirm(id) {
-  if (!confirm('Delete this session?')) return;
-  await api(`/api/sessions/${id}`, { method:'DELETE' });
-  closeModal();
-  loadSessions();
-  showToast('Session deleted');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  TECHNIQUES
-// ══════════════════════════════════════════════════════════════════════════════
-function renderTechniques(filter = '') {
-  const cats = {};
-  const f = filter.toLowerCase();
-  allTechniques.forEach(t => {
-    if (f && !t.name.toLowerCase().includes(f) && !t.category.toLowerCase().includes(f)) return;
-    if (!cats[t.category]) cats[t.category] = [];
-    cats[t.category].push(t);
-  });
-  const order = ['submission','guard','pass','sweep','takedown','control','escape'];
-  const icons = {submission:'🔒',guard:'🛡️',pass:'⚡',sweep:'🔄',takedown:'💥',control:'🎯',escape:'🏃'};
-  document.getElementById('techniques-list').innerHTML = order.filter(c => cats[c]).map(c =>
-    `<div class="technique-category">
-      <div class="technique-category-title">${icons[c]||''} ${c.toUpperCase()}</div>
-      <div class="technique-grid">${cats[c].map(t => `<span class="tag">${t.name}</span>`).join('')}</div>
-    </div>`).join('');
-}
-
-function filterTechniques(q) { renderTechniques(q); }
-
-function openSubmitTechModal() {
-  openModal('Submit New Technique', `
-    <div class="field"><label>Technique Name</label><input id="st-name" placeholder="e.g. Buggy Choke"></div>
-    <div class="field"><label>Category</label>
-      <select id="st-cat"><option value="">Select...</option><option value="submission">Submission</option><option value="guard">Guard</option><option value="pass">Pass</option><option value="sweep">Sweep</option><option value="takedown">Takedown</option><option value="control">Control</option><option value="escape">Escape</option></select>
-    </div>
-    <div class="field"><label>Description (optional)</label><textarea id="st-desc" placeholder="Brief description..."></textarea></div>
-    <button class="btn-primary" onclick="submitTechnique()">Submit for Review</button>
-  `);
-}
-
-async function submitTechnique() {
-  const name = document.getElementById('st-name').value.trim();
-  const category = document.getElementById('st-cat').value;
-  const description = document.getElementById('st-desc').value.trim();
-  if (!name || !category) { showToast('Name and category required', true); return; }
-  try {
-    await api('/api/techniques/submit', { method:'POST', body:{ name, category, description }});
-    showToast('Technique submitted for review!');
-    closeModal();
-  } catch(e) { showToast(e.message, true); }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  FRIENDS
-// ══════════════════════════════════════════════════════════════════════════════
-async function loadFriends() {
-  const friends = await api('/api/friends');
-  const el = document.getElementById('friends-list');
-  if (!friends.length) {
-    el.innerHTML = '<div class="empty-state"><p>No training partners yet.<br>Search for fellow grapplers above!</p></div>';
-    return;
-  }
-  el.innerHTML = `<div class="card-label" style="margin-bottom:.5rem">YOUR TRAINING PARTNERS (${friends.length})</div>` +
-    friends.map(f => `
-      <div class="friend-item" onclick="viewProfile('${f.id}')">
-        ${avatarHTML(f, 'avatar-sm')}
-        <div class="friend-info">
-          <div class="friend-name">${f.display_name||f.username} <span class="belt-dot ${beltClass(f.belt)}"></span></div>
-          <div class="friend-detail">@${f.username}${f.gym ? ' · '+f.gym : ''}</div>
-        </div>
-      </div>`).join('');
-}
-
-async function loadPendingRequests() {
-  const pending = await api('/api/friends/pending');
-  const el = document.getElementById('pending-requests');
-  if (!pending.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="card-label" style="margin-bottom:.5rem">PENDING REQUESTS</div>` +
-    pending.map(f => `
-      <div class="friend-item">
-        ${avatarHTML(f, 'avatar-sm')}
-        <div class="friend-info">
-          <div class="friend-name">${f.display_name||f.username}</div>
-          <div class="friend-detail">@${f.username}</div>
-        </div>
-        <div class="friend-actions">
-          <button class="btn-secondary btn-small btn-success" onclick="event.stopPropagation();respondRequest('${f.friendship_id}',true)">Accept</button>
-          <button class="btn-secondary btn-small btn-danger" onclick="event.stopPropagation();respondRequest('${f.friendship_id}',false)">Decline</button>
-        </div>
-      </div>`).join('');
-}
-
-async function loadFriendsBadge() {
-  const pending = await api('/api/friends/pending');
-  const badge = document.getElementById('badge-friends');
-  if (pending.length) { badge.textContent = pending.length; badge.classList.add('show'); }
-  else badge.classList.remove('show');
-}
-
-function debounceSearch(q) {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => searchUsers(q), 300);
-}
-
-async function searchUsers(q) {
-  const el = document.getElementById('search-results');
-  if (q.length < 2) { el.innerHTML = ''; return; }
-  const users = await api(`/api/users/search?q=${encodeURIComponent(q)}`);
-  if (!users.length) { el.innerHTML = '<p style="color:var(--text3);font-size:.8rem;padding:.5rem">No users found.</p>'; return; }
-  el.innerHTML = users.map(u => `
-    <div class="friend-item" onclick="viewProfile('${u.id}')">
-      ${avatarHTML(u, 'avatar-sm')}
-      <div class="friend-info">
-        <div class="friend-name">${u.display_name||u.username} <span class="belt-dot ${beltClass(u.belt)}"></span></div>
-        <div class="friend-detail">@${u.username}${u.gym ? ' · '+u.gym : ''}</div>
-      </div>
-      <button class="btn-secondary btn-small" onclick="event.stopPropagation();sendFriendReq('${u.id}')">Add</button>
-    </div>`).join('');
-}
-
-async function sendFriendReq(userId) {
-  try {
-    await api('/api/friends/request', { method:'POST', body:{ user_id: userId }});
-    showToast('Friend request sent! 🤝');
-    searchUsers(document.getElementById('friend-search').value);
-  } catch(e) { showToast(e.message, true); }
-}
-
-async function respondRequest(friendshipId, accept) {
-  try {
-    await api('/api/friends/respond', { method:'POST', body:{ friendship_id: friendshipId, accept }});
-    showToast(accept ? 'New training partner! 🤙' : 'Request declined');
-    loadPendingRequests();
-    loadFriends();
-    loadFriendsBadge();
-  } catch(e) { showToast(e.message, true); }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  PROFILE
-// ══════════════════════════════════════════════════════════════════════════════
-function loadMyProfile() { viewProfile(ME.id); }
-
-async function viewProfile(userId) {
-  switchView('profile');
-  const el = document.getElementById('profile-content');
-  el.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text3)">Loading...</div>';
-
-  const profile = await api(`/api/profile/${userId}`);
-  const isSelf = profile.is_self;
-  const belt = profile.belt || 'white';
-  const stripesDots = '●'.repeat(profile.stripes||0) + '○'.repeat(4 - (profile.stripes||0));
-
-  let friendBtn = '';
-  if (!isSelf && profile.friendship) {
-    const fs = profile.friendship;
-    if (fs.status === 'none') friendBtn = `<button class="btn-secondary" onclick="sendFriendReq('${userId}')">+ Add Friend</button>`;
-    else if (fs.status === 'pending' && fs.is_receiver) friendBtn = `<button class="btn-secondary btn-success" onclick="respondRequest('${fs.friendship_id}',true)">Accept Request</button>`;
-    else if (fs.status === 'pending') friendBtn = `<button class="btn-secondary" disabled>Request Pending</button>`;
-    else if (fs.status === 'accepted') friendBtn = `<button class="btn-secondary btn-danger" onclick="removeFriend('${userId}')">Remove Friend</button>`;
-  }
-
-  let profileHTML = `
-    <div class="profile-banner">
-      ${isSelf ? `<button class="edit-profile-btn" onclick="openEditProfile()">✎ Edit</button>` : ''}
-      <div class="profile-avatar-wrap">${avatarHTML(profile, 'avatar-xl')}</div>
-      <div class="profile-name">${profile.display_name || profile.username}</div>
-      <div class="profile-handle">@${profile.username}</div>
-      ${profile.bio ? `<div class="profile-bio">${profile.bio}</div>` : ''}
-      <div class="profile-belt-row">
-        <span class="belt-dot ${beltClass(belt)}"></span>
-        <span style="font-size:.85rem;font-weight:600;text-transform:capitalize">${belt}</span>
-        <span style="font-size:.75rem;color:var(--text3);font-family:var(--font-m);letter-spacing:2px">${stripesDots}</span>
-      </div>
-      ${profile.gym ? `<div style="font-size:.8rem;color:var(--text3);margin-top:.25rem">📍 ${profile.gym}</div>` : ''}
-      <div class="profile-stats-row">
-        <div class="profile-stat"><div class="profile-stat-val">${profile.session_count||0}</div><div class="profile-stat-label">Sessions</div></div>
-        <div class="profile-stat"><div class="profile-stat-val">${profile.total_hours||0}</div><div class="profile-stat-label">Hours</div></div>
-        <div class="profile-stat"><div class="profile-stat-val">${profile.friend_count||0}</div><div class="profile-stat-label">Partners</div></div>
-      </div>
-      ${friendBtn ? `<div class="profile-actions">${friendBtn}</div>` : ''}
-      ${isSelf ? `<div class="profile-actions"><button class="btn-secondary btn-small btn-danger" onclick="logout()">Sign Out</button></div>` : ''}
-    </div>
-    <div class="profile-tab-row">
-      <button class="profile-tab active" onclick="loadProfilePosts('${userId}',this)">Posts</button>
-      ${isSelf || profile.profile_public ? `<button class="profile-tab" onclick="loadProfileSessions('${userId}',this)">Sessions</button>` : ''}
-    </div>
-    <div id="profile-tab-content"></div>`;
-
-  el.innerHTML = profileHTML;
-  loadProfilePosts(userId);
-}
-
-async function loadProfilePosts(userId, tabBtn) {
-  if (tabBtn) { document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active')); tabBtn.classList.add('active'); }
-  const posts = await api(`/api/posts/user/${userId}`);
-  document.getElementById('profile-tab-content').innerHTML = posts.length ?
-    posts.map(p => renderPostCard(p)).join('') :
-    '<div class="empty-state"><p>No posts yet.</p></div>';
-}
-
-async function loadProfileSessions(userId, tabBtn) {
-  if (tabBtn) { document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active')); tabBtn.classList.add('active'); }
-  const sessions = await api(`/api/sessions?user_id=${userId}`);
-  document.getElementById('profile-tab-content').innerHTML = sessions.length ?
-    sessions.map(s => `
-      <div class="session-item" onclick="${s.user_id===ME.id ? `viewSession('${s.id}')` : ''}">
-        <div class="session-date">${s.date}</div>
-        <div class="session-info">
-          <div class="session-title">${s.duration}min · ${s.sparring||0} rounds</div>
-          <div class="session-detail">${(s.techniques||[]).slice(0,3).join(', ') || 'No techniques recorded'}</div>
-        </div>
-      </div>`).join('') :
-    '<div class="empty-state"><p>No public sessions.</p></div>';
-}
-
-function openEditProfile() {
-  openModal('Edit Profile', `
-    <div class="field"><label>Display Name</label><input id="ep-name" value="${ME.display_name||''}"></div>
-    <div class="field"><label>Bio</label><textarea id="ep-bio">${ME.bio||''}</textarea></div>
-    <div class="field"><label>Gym</label><input id="ep-gym" value="${ME.gym||''}"></div>
-    <div class="grid2">
-      <div class="field"><label>Belt</label>
-        <select id="ep-belt">
-          ${['white','blue','purple','brown','black'].map(b => `<option value="${b}" ${ME.belt===b?'selected':''}>${b}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field"><label>Stripes</label>
-        <select id="ep-stripes">
-          ${[0,1,2,3,4].map(n => `<option value="${n}" ${ME.stripes==n?'selected':''}>${n}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="field"><label>Start Date</label><input type="date" id="ep-start" value="${ME.start_date||''}"></div>
-    <div class="field"><label>Avatar</label><input type="file" id="ep-avatar" accept="image/*"></div>
-    <div class="toggle-row">
-      <span class="toggle-label">Public profile?</span>
-      <label class="toggle"><input type="checkbox" id="ep-public" ${ME.profile_public?'checked':''}><span class="toggle-track"></span></label>
-    </div>
-    <button class="btn-primary" onclick="saveProfile()">Save Profile</button>
-  `);
-}
-
-async function saveProfile() {
-  const avatarFile = document.getElementById('ep-avatar').files[0];
-  if (avatarFile) {
-    try {
-      const r = await uploadFile('/api/profile/avatar', avatarFile, 'avatar');
-      ME.avatar_url = r.avatar_url;
-    } catch(e) {}
-  }
-  const data = {
-    display_name: document.getElementById('ep-name').value,
-    bio: document.getElementById('ep-bio').value,
-    gym: document.getElementById('ep-gym').value,
-    belt: document.getElementById('ep-belt').value,
-    stripes: parseInt(document.getElementById('ep-stripes').value),
-    start_date: document.getElementById('ep-start').value,
-    profile_public: document.getElementById('ep-public').checked ? 1 : 0
-  };
-  await api('/api/profile', { method:'PUT', body: data });
-  Object.assign(ME, data);
-  closeModal();
-  showToast('Profile updated! 🤙');
-  viewProfile(ME.id);
-}
-
-async function removeFriend(userId) {
-  if (!confirm('Remove this training partner?')) return;
-  await api(`/api/friends/${userId}`, { method:'DELETE' });
-  showToast('Friend removed');
-  viewProfile(userId);
-}
-
-async function findAndViewUser(username) {
-  const results = await api(`/api/users/search?q=${encodeURIComponent(username)}`);
-  const u = results.find(r => r.username.toLowerCase() === username.toLowerCase());
-  if (u) viewProfile(u.id);
-  else showToast('User not found', true);
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  NOTIFICATIONS
-// ══════════════════════════════════════════════════════════════════════════════
-async function loadNotifications() {
-  const notifs = await api('/api/notifications');
-  const el = document.getElementById('notif-list');
-  if (!notifs.length) {
-    el.innerHTML = '<div class="empty-state"><p>No notifications yet.</p></div>';
-    return;
-  }
-  el.innerHTML = notifs.map(n => {
-    const from = n.from_display_name || n.from_username || 'Someone';
-    let text = '', action = '';
-    switch(n.type) {
-      case 'like': text = `<strong>${from}</strong> gave kudos to your post`; action = `viewPostNotif('${n.reference_id}')`; break;
-      case 'comment': text = `<strong>${from}</strong> commented on your post`; action = `viewPostNotif('${n.reference_id}')`; break;
-      case 'friend_request': text = `<strong>${from}</strong> wants to be your training partner`; action = `switchView('friends');loadPendingRequests()`; break;
-      case 'friend_accept': text = `<strong>${from}</strong> accepted your friend request!`; action = `viewProfile('${n.from_user_id}')`; break;
-      case 'tag': text = `<strong>${from}</strong> tagged you in a post`; action = `viewPostNotif('${n.reference_id}')`; break;
-      default: text = `<strong>${from}</strong> interacted with you`;
-    }
-    return `<div class="notif-item ${n.is_read?'':'unread'}" onclick="${action}">
-      ${n.from_avatar_url ? `<div class="avatar avatar-sm"><img src="${n.from_avatar_url}"></div>` : `<div class="avatar avatar-sm">${(from[0]||'?').toUpperCase()}</div>`}
-      <div class="notif-text">${text}<div class="notif-time">${timeAgo(n.created_at)}</div></div>
-    </div>`;
-  }).join('');
-  markAllRead();
-}
-
-async function loadNotifBadge() {
-  const r = await api('/api/notifications/unread-count');
-  const badge = document.getElementById('badge-notif');
-  if (r.count > 0) { badge.textContent = r.count; badge.classList.add('show'); }
-  else badge.classList.remove('show');
-}
-
-async function markAllRead() {
-  await api('/api/notifications/mark-read', { method:'POST' });
-  document.getElementById('badge-notif').classList.remove('show');
-}
-
-function viewPostNotif(postId) {
-  switchView('feed');
-  // Scroll to post if visible
-  const el = document.getElementById('post-' + postId);
-  if (el) el.scrollIntoView({ behavior:'smooth', block:'center' });
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  MODAL
-// ══════════════════════════════════════════════════════════════════════════════
-function openModal(title, html) {
-  document.getElementById('modal-content').innerHTML = `<div class="modal-title">${title}</div>${html}`;
-  document.getElementById('modal').classList.add('open');
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  POLL FOR NOTIFICATIONS
-// ══════════════════════════════════════════════════════════════════════════════
-setInterval(() => {
-  if (TOKEN && ME) {
-    loadNotifBadge();
-    loadFriendsBadge();
-  }
-}, 30000);
-
-// ══════════════════════════════════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════════════════════════════════
-if (TOKEN) {
-  initApp();
-} else {
-  document.getElementById('auth-screen').style.display = 'flex';
-  document.getElementById('main-app').style.display = 'none';
-}
+const API='';let TOKEN=localStorage.getItem('tatami_token')||'';let ME=null;let allTechniques=[];
+let currentSessionTechs=[],currentSessionSubs=[],currentPostTaggedUsers=[];
+let postMediaUrl='',postMediaType='';
+let sessionChart=null,searchTimeout=null;
+let feedOffset=0,feedHasMore=true,exploreOffset=0,exploreHasMore=true;
+let isSessionMode=false;
+
+// ── API ──
+async function api(p,o={}){const h={'Content-Type':'application/json'};if(TOKEN)h['Authorization']=`Bearer ${TOKEN}`;const r=await fetch(API+p,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined});const d=await r.json();if(!r.ok)throw new Error(d.error||'Request failed');return d}
+async function uploadFile(p,file){const f=new FormData();f.append('file',file);const r=await fetch(API+p,{method:'POST',headers:{'Authorization':`Bearer ${TOKEN}`},body:f});return r.json()}
+function showToast(m,e=false){const t=document.getElementById('toast');t.textContent=m;t.className='toast show'+(e?' error':'');setTimeout(()=>t.className='toast',3000)}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d+(d.includes('Z')?'':'Z')).getTime())/1000);if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';if(s<604800)return Math.floor(s/86400)+'d';return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}
+function beltClass(b){return'belt-'+(b||'white').replace(/\s/g,'-').toLowerCase()}
+function avatarHTML(u,c=''){const cl=c?` ${c}`:'';if(u.avatar_url)return`<div class="avatar${cl}"><img src="${u.avatar_url}" alt=""></div>`;return`<div class="avatar${cl}">${(u.display_name||u.username||'?')[0].toUpperCase()}</div>`}
+
+// ── THEME ──
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('meta-theme').content=t==='dark'?'#0a0a0a':'#f5f3ef';localStorage.setItem('tatami_theme',t)}
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme')||'dark';const next=cur==='dark'?'light':'dark';applyTheme(next);if(ME)api('/api/profile',{method:'PUT',body:{theme:next}}).catch(()=>{})}
+applyTheme(localStorage.getItem('tatami_theme')||'dark');
+
+// ── AUTH ──
+function showAuthTab(t){document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('active',(t==='login'?0:1)===i));document.getElementById('login-form').classList.toggle('active',t==='login');document.getElementById('register-form').classList.toggle('active',t==='register');document.getElementById('auth-error').style.display='none'}
+function showAuthError(m){const e=document.getElementById('auth-error');e.textContent=m;e.style.display='block'}
+async function handleLogin(e){e.preventDefault();const f=new FormData(e.target);try{const r=await api('/api/auth/login',{method:'POST',body:{login:f.get('login'),password:f.get('password')}});TOKEN=r.token;localStorage.setItem('tatami_token',TOKEN);await initApp()}catch(e){showAuthError(e.message)}return false}
+async function handleRegister(e){e.preventDefault();const f=new FormData(e.target);try{const r=await api('/api/auth/register',{method:'POST',body:{username:f.get('username'),email:f.get('email'),password:f.get('password'),display_name:f.get('display_name')}});TOKEN=r.token;localStorage.setItem('tatami_token',TOKEN);await initApp()}catch(e){showAuthError(e.message)}return false}
+function logout(){api('/api/auth/logout',{method:'POST'}).catch(()=>{});TOKEN='';ME=null;localStorage.removeItem('tatami_token');document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}
+
+// ── INIT ──
+async function initApp(){try{ME=await api('/api/auth/me');if(ME.theme)applyTheme(ME.theme);document.getElementById('auth-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('feed-greeting').textContent=`oss, ${ME.display_name||ME.username}`;const av=document.getElementById('feed-avatar');if(ME.avatar_url)av.innerHTML=`<img src="${ME.avatar_url}">`;else av.textContent=(ME.display_name||ME.username||'?')[0].toUpperCase();allTechniques=await api('/api/techniques');populateTechSelects();loadFeed(true);loadNotifBadge();loadFriendsBadge()}catch(e){TOKEN='';localStorage.removeItem('tatami_token');document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}}
+
+function switchView(n){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById('view-'+n).classList.add('active');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===n));if(n==='friends'){loadFriends();loadPendingRequests()}if(n==='notifications')loadNotifications();if(n==='log')loadSessions();if(n==='explore')loadExplore(true)}
+
+// ── FEED ──
+async function loadFeed(reset=false){if(reset){feedOffset=0;feedHasMore=true;document.getElementById('feed-list').innerHTML=''}const posts=await api(`/api/feed?offset=${feedOffset}`);const el=document.getElementById('feed-list');if(!posts.length&&feedOffset===0){el.innerHTML='<div class="empty-state"><p>Your feed is empty. Add some friends to see their sessions!</p></div>';document.getElementById('feed-load-more').style.display='none';return}
+posts.forEach(p=>{el.insertAdjacentHTML('beforeend',renderPostCard(p));loadCommentsInline(p.id)});feedOffset+=posts.length;feedHasMore=posts.length>=10;document.getElementById('feed-load-more').style.display=feedHasMore?'block':'none'}
+function loadMoreFeed(){if(feedHasMore)loadFeed()}
+
+function renderPostCard(p){
+  const isOwn=ME&&p.user_id===ME.id;
+  let mediaHTML='';
+  if(p.image_url)mediaHTML=`<img class="post-image" src="${p.image_url}" onclick="window.open('${p.image_url}','_blank')">`;
+  if(p.video_url)mediaHTML=`<video class="post-video" src="${p.video_url}" controls preload="metadata"></video>`;
+  const content=p.content?`<div class="post-content">${renderMentions(p.content)}</div>`:'';
+  const feeling=p.feeling?`<div class="post-feeling">${p.feeling}</div>`:'';
+  const sessionHTML=p.is_session?renderSessionEmbed(p):'';
+  return`<div class="post-card fade-in" id="post-${p.id}">
+<div class="post-header">${avatarHTML(p)}<div class="post-user-info"><div class="post-username" onclick="viewProfile('${p.user_id}')">${p.display_name||p.username}</div><div class="post-meta"><span class="belt-dot ${beltClass(p.belt)}"></span>${p.belt||'white'} belt · ${timeAgo(p.created_at)}</div></div>${isOwn?`<button class="post-delete" onclick="deletePost('${p.id}')" title="Delete">✕</button>`:''}</div>
+${feeling}${content}${mediaHTML}${sessionHTML}
+<div class="post-actions"><button class="post-action-btn ${p.user_liked?'liked':''}" onclick="toggleLike('${p.id}',this)"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>${p.like_count||0}</span></button><button class="post-action-btn" onclick="focusComment('${p.id}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="cc-${p.id}">${p.comment_count||0}</span></button></div>
+<div class="comments-section" id="comments-${p.id}"><div class="comment-input-row"><input id="ci-${p.id}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')postComment('${p.id}')"><button onclick="postComment('${p.id}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
+</div>`}
+
+function renderSessionEmbed(p){
+  const techs=(p.session_techniques||[]).slice(0,5).map(t=>`<span class="tag gold" style="font-size:.65rem;padding:.1rem .4rem">${t}</span>`).join('');
+  const subs=(p.session_submissions||[]).map(s=>`<span class="tag ${s.role==='gave'?'green':'red'}" style="font-size:.65rem;padding:.1rem .4rem">${s.technique} ${s.role==='gave'?'✓':'✗'}</span>`).join('');
+  return`<div class="post-session-embed"><span class="pse-badge">Session</span><div class="pse-date">🥋 ${p.session_date||''}</div><div class="pse-stats"><span>⏱ ${p.session_duration||0}min</span><span>🤼 ${p.session_sparring||0} rnds</span>${p.session_drills?`<span>🔄 ${p.session_drills}min drills</span>`:''}</div>${p.session_notes?`<div class="pse-notes">${p.session_notes.replace(/</g,'&lt;')}</div>`:''}${techs?`<div class="pse-techs">${techs}</div>`:''}${subs?`<div class="pse-subs">${subs}</div>`:''}</div>`}
+
+function renderMentions(t){return t.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/@(\w+)/g,'<span class="tag-mention" onclick="findAndViewUser(\'$1\')">@$1</span>')}
+
+async function loadCommentsInline(postId){const section=document.getElementById('comments-'+postId);const comments=await api(`/api/posts/${postId}/comments`);const inputRow=section.querySelector('.comment-input-row').outerHTML;section.innerHTML=comments.map(c=>`<div class="comment-item">${avatarHTML(c,'avatar-sm')}<div class="comment-body"><div class="comment-author" onclick="viewProfile('${c.user_id}')">${c.display_name||c.username}</div><div class="comment-text">${c.content.replace(/</g,'&lt;')}</div><div class="comment-time">${timeAgo(c.created_at)}</div></div></div>`).join('')+inputRow}
+
+function focusComment(id){document.getElementById('ci-'+id)?.focus()}
+
+async function postComment(postId){const input=document.getElementById('ci-'+postId);const c=input.value.trim();if(!c)return;try{await api(`/api/posts/${postId}/comments`,{method:'POST',body:{content:c}});input.value='';loadCommentsInline(postId);const cc=document.getElementById('cc-'+postId);if(cc)cc.textContent=parseInt(cc.textContent)+1}catch(e){showToast(e.message,true)}}
+
+async function toggleLike(postId,btn){try{const r=await api(`/api/posts/${postId}/like`,{method:'POST'});btn.classList.toggle('liked',r.liked);btn.querySelector('span').textContent=parseInt(btn.querySelector('span').textContent)+(r.liked?1:-1)}catch(e){}}
+
+async function deletePost(postId){if(!confirm('Delete this post?'))return;await api(`/api/posts/${postId}`,{method:'DELETE'});document.getElementById('post-'+postId)?.remove();showToast('Post deleted')}
+
+// ── CREATE UNIFIED POST / SESSION ──
+function toggleSessionFields(){isSessionMode=!isSessionMode;document.getElementById('cp-session-fields').classList.toggle('open',isSessionMode);document.getElementById('cp-session-toggle').classList.toggle('active-toggle',isSessionMode);if(isSessionMode){document.getElementById('sf-date').value=new Date().toISOString().slice(0,10);document.getElementById('cp-content').placeholder='How was training today?'}else{document.getElementById('cp-content').placeholder='Share a training update...'}updateSubmitBtn()}
+
+function updateSubmitBtn(){const has=document.getElementById('cp-content').value.trim()||postMediaUrl||isSessionMode;document.getElementById('cp-submit').disabled=!has}
+
+async function handleMediaUpload(input){if(!input.files[0])return;try{const r=await uploadFile('/api/posts/upload',input.files[0]);postMediaUrl=r.url;postMediaType=r.type;const prev=document.getElementById('cp-media-preview');prev.style.display='block';prev.innerHTML=(r.type==='video'?`<video src="${r.url}" style="max-height:120px;border-radius:8px" controls></video>`:`<img src="${r.url}">`)+`<button class="remove-media" onclick="removeMedia()">×</button>`;updateSubmitBtn()}catch(e){showToast('Upload failed',true)}input.value=''}
+function removeMedia(){postMediaUrl='';postMediaType='';document.getElementById('cp-media-preview').style.display='none';document.getElementById('cp-media-preview').innerHTML='';updateSubmitBtn()}
+
+async function submitUnifiedPost(){const content=document.getElementById('cp-content').value.trim();const taggedIds=currentPostTaggedUsers.map(u=>u.id);const tagMentions=currentPostTaggedUsers.map(u=>'@'+u.username).join(' ');const fullContent=content+(tagMentions?(content?'\n':'')+tagMentions:'');
+const body={content:fullContent,tagged_users:taggedIds,is_public:1};
+if(postMediaType==='video')body.video_url=postMediaUrl;else if(postMediaUrl)body.image_url=postMediaUrl;
+if(isSessionMode){const feeling=document.getElementById('sf-feeling').value.trim();body.feeling=feeling;body.is_session=true;body.session_date=document.getElementById('sf-date').value;body.session_duration=parseInt(document.getElementById('sf-duration').value)||0;body.session_sparring=parseInt(document.getElementById('sf-sparring').value)||0;body.session_drills=parseInt(document.getElementById('sf-drills').value)||0;body.session_notes=document.getElementById('sf-notes').value;body.session_techniques=currentSessionTechs;body.session_submissions=currentSessionSubs;body.is_public=document.getElementById('sf-public').checked?1:0;if(!body.session_date||!body.session_duration){showToast('Date and duration required',true);return}}
+try{await api('/api/posts',{method:'POST',body});resetCreateForm();showToast(isSessionMode?'Session logged & posted! 🥋':'Posted! 🤙');isSessionMode=false;document.getElementById('cp-session-fields').classList.remove('open');document.getElementById('cp-session-toggle').classList.remove('active-toggle');document.getElementById('cp-content').placeholder='Share a training update...';loadFeed(true)}catch(e){showToast(e.message,true)}}
+
+function resetCreateForm(){document.getElementById('cp-content').value='';postMediaUrl='';postMediaType='';currentPostTaggedUsers=[];currentSessionTechs=[];currentSessionSubs=[];document.getElementById('cp-media-preview').style.display='none';document.getElementById('cp-media-preview').innerHTML='';document.getElementById('cp-tag-container').innerHTML='';document.getElementById('cp-submit').disabled=true;document.getElementById('sf-feeling').value='';document.getElementById('sf-notes').value='';renderSessionFormTags()}
+
+// ── SESSION FORM HELPERS ──
+function populateTechSelects(){const s1=document.getElementById('sf-tech-select');const s2=document.getElementById('sf-sub-tech');s1.innerHTML='<option value="">Choose technique...</option>'+allTechniques.map(t=>`<option value="${t.name}">${t.name} (${t.category})</option>`).join('');s2.innerHTML='<option value="">Technique...</option>'+allTechniques.filter(t=>t.category==='submission').map(t=>`<option value="${t.name}">${t.name}</option>`).join('')}
+function addSessionTech(n){if(!n||currentSessionTechs.includes(n))return;currentSessionTechs.push(n);renderSessionFormTags()}
+function removeSessionTech(n){currentSessionTechs=currentSessionTechs.filter(t=>t!==n);renderSessionFormTags()}
+function addSessionSub(){const t=document.getElementById('sf-sub-tech').value,r=document.getElementById('sf-sub-role').value;if(!t)return;currentSessionSubs.push({technique:t,role:r});renderSessionFormTags()}
+function removeSessionSub(i){currentSessionSubs.splice(i,1);renderSessionFormTags()}
+function renderSessionFormTags(){document.getElementById('sf-tech-tags').innerHTML=currentSessionTechs.map(t=>`<span class="tag gold">${t} <span style="cursor:pointer" onclick="removeSessionTech('${t}')">✕</span></span>`).join('');document.getElementById('sf-sub-tags').innerHTML=currentSessionSubs.map((s,i)=>`<span class="tag ${s.role==='gave'?'green':'red'}">${s.technique} (${s.role==='gave'?'submitted':'tapped'}) <span style="cursor:pointer" onclick="removeSessionSub(${i})">✕</span></span>`).join('')}
+
+// ── TAG PICKER ──
+function openTagPicker(){openModal('Tag Friends',`<div class="search-bar" style="margin-bottom:1rem"><input type="text" id="modal-tag-search" placeholder="Search friends..." oninput="searchForTag(this.value)"></div><div id="modal-tag-results"></div>`);api('/api/friends').then(fr=>{document.getElementById('modal-tag-results').innerHTML=fr.map(f=>`<div class="friend-item" onclick="addTag(${JSON.stringify(f).replace(/"/g,'&quot;')})">${avatarHTML(f,'avatar-sm')}<div class="friend-info"><div class="friend-name">${f.display_name||f.username}</div><div class="friend-detail">@${f.username}</div></div></div>`).join('')})}
+async function searchForTag(q){if(q.length<2)return;const r=await api(`/api/users/search?q=${encodeURIComponent(q)}`);document.getElementById('modal-tag-results').innerHTML=r.map(f=>`<div class="friend-item" onclick="addTag(${JSON.stringify(f).replace(/"/g,'&quot;')})">${avatarHTML(f,'avatar-sm')}<div class="friend-info"><div class="friend-name">${f.display_name||f.username}</div></div></div>`).join('')}
+function addTag(u){if(currentPostTaggedUsers.find(x=>x.id===u.id))return;currentPostTaggedUsers.push(u);document.getElementById('cp-tag-container').innerHTML=currentPostTaggedUsers.map(u=>`<span class="tag blue">@${u.username} <span style="cursor:pointer;margin-left:2px" onclick="removeTag('${u.id}')">✕</span></span>`).join('');updateSubmitBtn()}
+function removeTag(id){currentPostTaggedUsers=currentPostTaggedUsers.filter(u=>u.id!==id);document.getElementById('cp-tag-container').innerHTML=currentPostTaggedUsers.map(u=>`<span class="tag blue">@${u.username} <span style="cursor:pointer;margin-left:2px" onclick="removeTag('${u.id}')">✕</span></span>`).join('')}
+
+// ── LOG (personal sessions) ──
+async function loadSessions(){const sessions=await api('/api/sessions');const total=sessions.length,mins=sessions.reduce((a,s)=>a+s.session_duration,0),spar=sessions.reduce((a,s)=>a+(s.session_sparring||0),0);document.getElementById('my-sessions-stats').innerHTML=`<div class="card"><div class="card-label">Sessions</div><div class="card-val red">${total}</div></div><div class="card"><div class="card-label">Hours</div><div class="card-val">${(mins/60).toFixed(1)}</div></div><div class="card"><div class="card-label">Rounds</div><div class="card-val">${spar}</div></div>`;
+renderSessionChart(sessions);const el=document.getElementById('sessions-list');if(!sessions.length){el.innerHTML='<div class="empty-state"><p>No sessions logged yet. Go to the Feed tab and tap "Log Session"! 🥋</p></div>';return}
+el.innerHTML=sessions.map(s=>`<div class="session-item" onclick="viewSessionDetail('${s.id}')"><div class="session-date">${s.session_date}</div><div class="session-info"><div class="session-title">${s.session_duration}min · ${s.session_sparring||0} rounds${s.session_techniques?.length?' · '+s.session_techniques.length+' techs':''}</div><div class="session-detail">${s.feeling||s.session_notes?.slice(0,50)||(s.content?.slice(0,50))||'No notes'}</div></div><span class="session-privacy ${s.is_public?'public':'private'}">${s.is_public?'👁':'🔒'}</span></div>`).join('')}
+
+function renderSessionChart(sessions){const wrap=document.getElementById('session-chart-wrap');if(sessions.length<2){wrap.style.display='none';return}wrap.style.display='block';const last30=sessions.filter(s=>new Date(s.session_date)>=new Date(Date.now()-30*86400000)).reverse();if(sessionChart)sessionChart.destroy();sessionChart=new Chart(document.getElementById('session-chart'),{type:'bar',data:{labels:last30.map(s=>(s.session_date||'').slice(5)),datasets:[{label:'Minutes',data:last30.map(s=>s.session_duration),backgroundColor:'rgba(230,57,70,.6)',borderRadius:4}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888',font:{size:10,family:'JetBrains Mono'}},grid:{display:false}},y:{ticks:{color:'#888',font:{size:10}},grid:{color:'rgba(80,80,80,.3)'}}}}})}
+
+function viewSessionDetail(id){api('/api/sessions').then(sessions=>{const s=sessions.find(x=>x.id===id);if(!s)return;const techs=s.session_techniques?.length?s.session_techniques.map(t=>`<span class="tag gold">${t}</span>`).join(''):'<span style="color:var(--text3);font-size:.8rem">None</span>';const subs=s.session_submissions?.length?s.session_submissions.map(x=>`<span class="tag ${x.role==='gave'?'green':'red'}">${x.technique} (${x.role==='gave'?'✓':'✗'})</span>`).join(''):'<span style="color:var(--text3);font-size:.8rem">None</span>';openModal('Session Details',`<div style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold)">${s.session_date}</div>${s.feeling?`<div style="font-style:italic;color:var(--text2);margin:.3rem 0">${s.feeling}</div>`:''}<div class="grid3" style="margin:.75rem 0"><div><div class="card-label">Duration</div><div style="font-size:1.1rem;font-weight:600">${s.session_duration}min</div></div><div><div class="card-label">Sparring</div><div style="font-size:1.1rem;font-weight:600">${s.session_sparring} rnds</div></div><div><div class="card-label">Drills</div><div style="font-size:1.1rem;font-weight:600">${s.session_drills}min</div></div></div>${s.session_notes?`<div class="card-label">Notes</div><p style="font-size:.85rem;color:var(--text2);margin-bottom:.75rem;white-space:pre-wrap">${s.session_notes}</p>`:''}<div class="card-label">Techniques</div><div style="margin:.3rem 0 .75rem;display:flex;flex-wrap:wrap;gap:.3rem">${techs}</div><div class="card-label">Submissions</div><div style="margin:.3rem 0 .75rem;display:flex;flex-wrap:wrap;gap:.3rem">${subs}</div>${s.image_url?`<img src="${s.image_url}" style="width:100%;border-radius:8px;margin:.5rem 0">`:''}<div style="display:flex;gap:.5rem;margin-top:.75rem"><button class="btn-secondary btn-danger" onclick="if(confirm('Delete?'))api('/api/posts/${s.id}',{method:'DELETE'}).then(()=>{closeModal();loadSessions();showToast('Deleted')})">Delete</button></div>`)})}
+
+// ── EXPLORE (gallery) ──
+async function loadExplore(reset=false){if(reset){exploreOffset=0;exploreHasMore=true;document.getElementById('explore-grid').innerHTML=''}const items=await api(`/api/explore?offset=${exploreOffset}`);const el=document.getElementById('explore-grid');items.forEach(p=>{let inner='';if(p.image_url)inner=`<img src="${p.image_url}"><div class="et-overlay">❤ ${p.like_count} 💬 ${p.comment_count}</div>`;else if(p.video_url)inner=`<video src="${p.video_url}" muted></video><div class="et-overlay">❤ ${p.like_count} 💬 ${p.comment_count}</div>`;else if(p.is_session)inner=`<div class="et-session"><div class="es-emoji">🥋</div><div class="es-dur">${p.session_duration||0}min</div><div class="es-user">@${p.username}</div></div>`;el.insertAdjacentHTML('beforeend',`<div class="explore-tile" onclick="viewExploreItem('${p.id}')">${inner}</div>`)});exploreOffset+=items.length;exploreHasMore=items.length>=30;document.getElementById('explore-load-more').style.display=exploreHasMore?'block':'none'}
+function loadMoreExplore(){if(exploreHasMore)loadExplore()}
+async function viewExploreItem(id){switchView('feed');await loadFeed(true);setTimeout(()=>{const el=document.getElementById('post-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'})},300)}
+
+// ── FRIENDS ──
+async function loadFriends(){const fr=await api('/api/friends');const el=document.getElementById('friends-list');if(!fr.length){el.innerHTML='<div class="empty-state"><p>No friends yet. Search above!</p></div>';return}el.innerHTML=`<div class="card-label" style="margin-bottom:.5rem">YOUR FRIENDS (${fr.length})</div>`+fr.map(f=>`<div class="friend-item" onclick="viewProfile('${f.id}')">${avatarHTML(f,'avatar-sm')}<div class="friend-info"><div class="friend-name">${f.display_name||f.username} <span class="belt-dot ${beltClass(f.belt)}"></span></div><div class="friend-detail">@${f.username}${f.gym?' · '+f.gym:''}</div></div></div>`).join('')}
+async function loadPendingRequests(){const p=await api('/api/friends/pending');const el=document.getElementById('pending-requests');if(!p.length){el.innerHTML='';return}el.innerHTML=`<div class="card-label" style="margin-bottom:.5rem">PENDING REQUESTS</div>`+p.map(f=>`<div class="friend-item">${avatarHTML(f,'avatar-sm')}<div class="friend-info"><div class="friend-name">${f.display_name||f.username}</div><div class="friend-detail">@${f.username}</div></div><div class="friend-actions"><button class="btn-secondary btn-small btn-success" onclick="event.stopPropagation();respondRequest('${f.friendship_id}',true)">Accept</button><button class="btn-secondary btn-small btn-danger" onclick="event.stopPropagation();respondRequest('${f.friendship_id}',false)">Decline</button></div></div>`).join('')}
+async function loadFriendsBadge(){const p=await api('/api/friends/pending');const b=document.getElementById('badge-friends');if(p.length){b.textContent=p.length;b.classList.add('show')}else b.classList.remove('show')}
+function debounceSearch(q){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>searchUsersUI(q),300)}
+async function searchUsersUI(q){const el=document.getElementById('search-results');if(q.length<2){el.innerHTML='';return}const u=await api(`/api/users/search?q=${encodeURIComponent(q)}`);if(!u.length){el.innerHTML='<p style="color:var(--text3);font-size:.8rem;padding:.5rem">No users found.</p>';return}el.innerHTML=u.map(u=>`<div class="friend-item" onclick="viewProfile('${u.id}')">${avatarHTML(u,'avatar-sm')}<div class="friend-info"><div class="friend-name">${u.display_name||u.username} <span class="belt-dot ${beltClass(u.belt)}"></span></div><div class="friend-detail">@${u.username}${u.gym?' · '+u.gym:''}</div></div><button class="btn-secondary btn-small" onclick="event.stopPropagation();sendFriendReq('${u.id}')">Add</button></div>`).join('')}
+async function sendFriendReq(id){try{await api('/api/friends/request',{method:'POST',body:{user_id:id}});showToast('Friend request sent! 🤝')}catch(e){showToast(e.message,true)}}
+async function respondRequest(fId,accept){try{await api('/api/friends/respond',{method:'POST',body:{friendship_id:fId,accept}});showToast(accept?'New friend! 🤙':'Request declined');loadPendingRequests();loadFriends();loadFriendsBadge()}catch(e){showToast(e.message,true)}}
+
+// ── PROFILE ──
+function loadMyProfile(){viewProfile(ME.id)}
+async function viewProfile(userId){switchView('profile');const el=document.getElementById('profile-content');el.innerHTML='<div style="text-align:center;padding:3rem;color:var(--text3)">Loading...</div>';const profile=await api(`/api/profile/${userId}`);const isSelf=profile.is_self;const belt=profile.belt||'white';const stripes='●'.repeat(profile.stripes||0)+'○'.repeat(4-(profile.stripes||0));let fBtn='';if(!isSelf&&profile.friendship){const fs=profile.friendship;if(fs.status==='none')fBtn=`<button class="btn-secondary" onclick="sendFriendReq('${userId}')">+ Add Friend</button>`;else if(fs.status==='pending'&&fs.is_receiver)fBtn=`<button class="btn-secondary btn-success" onclick="respondRequest('${fs.friendship_id}',true)">Accept Request</button>`;else if(fs.status==='pending')fBtn=`<button class="btn-secondary" disabled>Request Pending</button>`;else if(fs.status==='accepted')fBtn=`<button class="btn-secondary btn-danger" onclick="removeFriendConfirm('${userId}')">Remove Friend</button>`}
+el.innerHTML=`<div class="profile-banner">${isSelf?`<button class="edit-profile-btn" onclick="openEditProfile()">✎ Edit</button>`:''}<div style="display:flex;justify-content:center;margin-bottom:.75rem">${avatarHTML(profile,'avatar-xl')}</div><div class="profile-name">${profile.display_name||profile.username}</div><div class="profile-handle">@${profile.username}</div>${profile.bio?`<div class="profile-bio">${profile.bio}</div>`:''}<div class="profile-belt-row"><span class="belt-dot ${beltClass(belt)}"></span><span style="font-size:.85rem;font-weight:600;text-transform:capitalize">${belt}</span><span style="font-size:.75rem;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:2px">${stripes}</span></div>${profile.gym?`<div style="font-size:.8rem;color:var(--text3);margin-top:.25rem">📍 ${profile.gym}</div>`:''}<div class="profile-stats-row"><div class="profile-stat"><div class="profile-stat-val">${profile.session_count||0}</div><div class="profile-stat-label">Sessions</div></div><div class="profile-stat"><div class="profile-stat-val">${profile.total_hours||0}</div><div class="profile-stat-label">Hours</div></div><div class="profile-stat"><div class="profile-stat-val">${profile.friend_count||0}</div><div class="profile-stat-label">Friends</div></div></div>${fBtn?`<div class="profile-actions">${fBtn}</div>`:''}${isSelf?`<div class="profile-actions"><button class="btn-secondary btn-small btn-danger" onclick="logout()">Sign Out</button></div>`:''}</div><div class="profile-tab-row"><button class="profile-tab active" onclick="loadProfilePosts('${userId}',this)">Posts</button><button class="profile-tab" onclick="loadProfileSessions('${userId}',this)">Sessions</button></div><div id="profile-tab-content"></div>`;loadProfilePosts(userId)}
+async function loadProfilePosts(userId,btn){if(btn){document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active')}const posts=await api(`/api/posts/user/${userId}`);const el=document.getElementById('profile-tab-content');el.innerHTML=posts.length?posts.map(p=>renderPostCard(p)).join(''):'<div class="empty-state"><p>No posts yet.</p></div>';posts.forEach(p=>loadCommentsInline(p.id))}
+async function loadProfileSessions(userId,btn){if(btn){document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active')}const s=await api(`/api/sessions?user_id=${userId}`);document.getElementById('profile-tab-content').innerHTML=s.length?s.map(x=>`<div class="session-item"><div class="session-date">${x.session_date}</div><div class="session-info"><div class="session-title">${x.session_duration}min · ${x.session_sparring||0} rounds</div><div class="session-detail">${x.feeling||(x.session_techniques||[]).slice(0,3).join(', ')||'No details'}</div></div></div>`).join(''):'<div class="empty-state"><p>No public sessions.</p></div>'}
+function openEditProfile(){openModal('Edit Profile',`<div class="field"><label>Display Name</label><input id="ep-name" value="${ME.display_name||''}"></div><div class="field"><label>Bio</label><textarea id="ep-bio">${ME.bio||''}</textarea></div><div class="field"><label>Gym</label><input id="ep-gym" value="${ME.gym||''}"></div><div class="grid2"><div class="field"><label>Belt</label><select id="ep-belt">${['white','blue','purple','brown','black'].map(b=>`<option value="${b}" ${ME.belt===b?'selected':''}>${b}</option>`).join('')}</select></div><div class="field"><label>Stripes</label><select id="ep-stripes">${[0,1,2,3,4].map(n=>`<option value="${n}" ${ME.stripes==n?'selected':''}>${n}</option>`).join('')}</select></div></div><div class="field"><label>Start Date</label><input type="date" id="ep-start" value="${ME.start_date||''}"></div><div class="field"><label>Avatar</label><input type="file" id="ep-avatar" accept="image/*"></div><div class="toggle-row"><span class="toggle-label">Public profile?</span><label class="toggle"><input type="checkbox" id="ep-public" ${ME.profile_public?'checked':''}><span class="toggle-track"></span></label></div><button class="btn-primary" onclick="saveProfile()">Save Profile</button>`)}
+async function saveProfile(){const af=document.getElementById('ep-avatar').files[0];if(af){try{const r=await uploadFile('/api/profile/avatar',af);ME.avatar_url=r.avatar_url}catch(e){}}const d={display_name:document.getElementById('ep-name').value,bio:document.getElementById('ep-bio').value,gym:document.getElementById('ep-gym').value,belt:document.getElementById('ep-belt').value,stripes:parseInt(document.getElementById('ep-stripes').value),start_date:document.getElementById('ep-start').value,profile_public:document.getElementById('ep-public').checked?1:0};await api('/api/profile',{method:'PUT',body:d});Object.assign(ME,d);closeModal();showToast('Profile updated! 🤙');viewProfile(ME.id)}
+async function removeFriendConfirm(id){if(!confirm('Remove friend?'))return;await api(`/api/friends/${id}`,{method:'DELETE'});showToast('Friend removed');viewProfile(id)}
+async function findAndViewUser(username){const r=await api(`/api/users/search?q=${encodeURIComponent(username)}`);const u=r.find(x=>x.username.toLowerCase()===username.toLowerCase());if(u)viewProfile(u.id);else showToast('User not found',true)}
+
+// ── NOTIFICATIONS ──
+async function loadNotifications(){const ns=await api('/api/notifications');const el=document.getElementById('notif-list');if(!ns.length){el.innerHTML='<div class="empty-state"><p>No notifications yet.</p></div>';return}el.innerHTML=ns.map(n=>{const from=n.from_display_name||n.from_username||'Someone';let text='',action='';switch(n.type){case'like':text=`<strong>${from}</strong> gave kudos to your post`;action=`switchView('feed')`;break;case'comment':text=`<strong>${from}</strong> commented on your post`;action=`switchView('feed')`;break;case'friend_request':text=`<strong>${from}</strong> wants to be your friend`;action=`switchView('friends');loadPendingRequests()`;break;case'friend_accept':text=`<strong>${from}</strong> accepted your friend request!`;action=`viewProfile('${n.from_user_id}')`;break;case'tag':text=`<strong>${from}</strong> tagged you in a post`;action=`switchView('feed')`;break;default:text=`<strong>${from}</strong> interacted with you`}return`<div class="notif-item ${n.is_read?'':'unread'}" onclick="${action}">${n.from_avatar_url?`<div class="avatar avatar-sm"><img src="${n.from_avatar_url}"></div>`:`<div class="avatar avatar-sm">${(from[0]||'?').toUpperCase()}</div>`}<div class="notif-text">${text}<div class="notif-time">${timeAgo(n.created_at)}</div></div></div>`}).join('');markAllRead()}
+async function loadNotifBadge(){const r=await api('/api/notifications/unread-count');const b=document.getElementById('badge-notif');if(r.count>0){b.textContent=r.count;b.classList.add('show')}else b.classList.remove('show')}
+async function markAllRead(){await api('/api/notifications/mark-read',{method:'POST'});document.getElementById('badge-notif').classList.remove('show')}
+
+// ── MODAL ──
+function openModal(t,h){document.getElementById('modal-content').innerHTML=`<div class="modal-title">${t}</div>${h}`;document.getElementById('modal').classList.add('open')}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+// ── POLL ──
+setInterval(()=>{if(TOKEN&&ME){loadNotifBadge();loadFriendsBadge()}},30000);
+
+// ── BOOT ──
+if(TOKEN)initApp();else{document.getElementById('auth-screen').style.display='flex';document.getElementById('main-app').style.display='none'}
 </script>
 </body>
 </html>
