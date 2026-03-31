@@ -468,6 +468,7 @@ let cpMediaUrl='',cpMediaType='',isSessionMode=false;
 let sessionChart=null,searchTimeout=null,activeThreadUserId='',lastNotifCount=0,lastFeedRefreshAt=0;
 let feedOff=0,feedMore=true,expOff=0,expMore=true;
 let editingPostId=null;
+let isRefreshingFeed=false;
 
 // ═══ API ═══
 async function api(p,o={}){const h={'Content-Type':'application/json'};if(TOKEN)h.Authorization=`Bearer ${TOKEN}`;const r=await fetch(API+p,{method:o.method||'GET',headers:h,body:o.body?JSON.stringify(o.body):undefined});const d=await r.json();if(!r.ok){if(d.error==='Invalid or expired token')logout();throw new Error(d.error||'Failed')}return d}
@@ -513,27 +514,28 @@ setInterval(()=>{if(TOKEN&&ME&&document.getElementById('view-feed').classList.co
 document.addEventListener('click',e=>{if(!e.target.closest('#notif-bell')&&!e.target.closest('.notif-dropdown'))document.getElementById('notif-dd').classList.remove('open')});
 
 // ═══ FEED ═══
-async function loadFeed(reset){if(reset){feedOff=0;feedMore=true;document.getElementById('feed-list').innerHTML=''}const posts=await api(`/api/feed?offset=${feedOff}`);const el=document.getElementById('feed-list');if(!posts.length&&feedOff===0){el.innerHTML='<div class="empty"><p style="font-size:1.4rem">🥋</p><p>Your feed is empty.<br>Add friends to see their sessions!</p></div>';document.getElementById('feed-more').style.display='none';return}posts.forEach(p=>{el.insertAdjacentHTML('beforeend',renderPost(p));loadCmts(p.id)});feedOff+=posts.length;feedMore=posts.length>=10;document.getElementById('feed-more').style.display=feedMore?'block':'none'}
+async function loadFeed(reset){if(reset){feedOff=0;feedMore=true;document.getElementById('feed-list').innerHTML=''}const posts=await api(`/api/feed?offset=${feedOff}`);const el=document.getElementById('feed-list');if(!posts.length&&feedOff===0){el.innerHTML='<div class="empty"><p style="font-size:1.4rem">🥋</p><p>Your feed is empty.<br>Add friends to see their sessions!</p></div>';document.getElementById('feed-more').style.display='none';return}posts.forEach(p=>{el.insertAdjacentHTML('beforeend',renderPost(p,'feed'));loadCmts(p.id,'feed')});feedOff+=posts.length;feedMore=posts.length>=10;document.getElementById('feed-more').style.display=feedMore?'block':'none'}
 function loadMoreFeed(){if(feedMore)loadFeed()}
+async function maybeRefreshFeed(){if(isRefreshingFeed)return;isRefreshingFeed=true;try{const top=await api('/api/feed?offset=0');if(!top.length)return;const first=document.querySelector('#feed-list .post');if(!first){loadFeed(true);return}const currentId=first.dataset.postId;const newPosts=[];for(const p of top){if(p.id===currentId)break;newPosts.push(p)}if(newPosts.length){const el=document.getElementById('feed-list');newPosts.reverse().forEach(p=>{el.insertAdjacentHTML('afterbegin',renderPost(p,'feed'));loadCmts(p.id,'feed')})}}catch(e){}finally{isRefreshingFeed=false}}
 
-function renderPost(p){
+function renderPost(p,prefix='feed'){
   const own=ME&&p.user_id===ME.id;
   let media='';if(p.image_url)media=`<div class="post-media-wrap"><img class="post-media" src="${p.image_url}" onclick="window.open('${p.image_url}','_blank')"></div>`;
   if(p.video_url)media=`<div class="post-media-wrap"><video class="post-video" src="${p.video_url}" controls preload="metadata"></video></div>`;
   const body=p.content?`<div class="post-body">${renderMentions(p.content)}</div>`:'';
   const feel=p.feeling?`<div class="post-feeling">${esc(p.feeling)}</div>`:'';
   const sess=p.is_session?renderSessionEmbed(p):'';
-  return`<div class="post fade-up" id="post-${p.id}">
+  return`<div class="post fade-up" id="post-${prefix}-${p.id}" data-post-id="${p.id}">
 <div class="post-head">${av(p)}<div class="post-user"><div class="post-name" onclick="viewProfile('${p.user_id}')">${esc(p.display_name||p.username)}</div><div class="post-meta"><span class="belt-dot ${bc(p.belt)}"></span>${p.belt||'white'} belt · ${timeAgo(p.created_at)}${!p.is_public?' · 🔒':''}</div></div>${own?`<button class="post-del" onclick="postMenu('${p.id}')" title="Options">⋯</button>`:''}</div>
 ${feel}${body}${media}${sess}
-<div class="post-actions"><button class="pa-btn${p.user_liked?' liked':''}" onclick="toggleLike('${p.id}',this)"><svg class="heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>${p.like_count||0}</span></button><button class="pa-btn" onclick="focusCmt('${p.id}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="cc-${p.id}">${p.comment_count||0}</span></button></div>
-<div class="comments" id="cmts-${p.id}"><div class="cmt-input-row"><input id="ci-${p.id}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')postCmt('${p.id}')"><button onclick="postCmt('${p.id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
+<div class="post-actions"><button class="pa-btn${p.user_liked?' liked':''}" onclick="toggleLike('${p.id}',this)"><svg class="heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span>${p.like_count||0}</span></button><button class="pa-btn" onclick="focusCmt('${p.id}','${prefix}')"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span id="cc-${prefix}-${p.id}">${p.comment_count||0}</span></button></div>
+<div class="comments" id="cmts-${prefix}-${p.id}"><div class="cmt-input-row"><input id="ci-${prefix}-${p.id}" placeholder="Write a comment..." onkeydown="if(event.key==='Enter')postCmt('${p.id}','${prefix}')"><button onclick="postCmt('${p.id}','${prefix}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
 </div>`}
 
 function renderSessionEmbed(p){
   const techs=(p.session_techniques||[]).slice(0,5).map(t=>`<span class="tag gold">${esc(t)}</span>`).join('');
   const subs=(p.session_submissions||[]).map(s=>`<span class="tag ${s.role==='gave'?'grn':'red'}">${esc(s.technique)} ${s.role==='gave'?'✓':'✗'}</span>`).join('');
-  return`<div class="post-session"><span class="ps-badge">Session</span><div class="ps-date">🥋 ${p.session_date||''}</div><div class="ps-stats"><span>⏱ ${p.session_duration||0}min</span><span>🤼 ${p.session_sparring||0} rnds</span>${p.session_drills?`<span>🔄 ${p.session_drills}min drills</span>`:''}</div>${p.session_notes?`<div class="ps-notes">${esc(p.session_notes)}</div>`:''}${techs?`<div class="ps-techs">${techs}</div>`:''}${subs?`<div class="ps-subs">${subs}</div>`:''}${p.image_url&&p.is_session?`<img class="ps-img" src="${p.image_url}" onclick="window.open('${p.image_url}','_blank')">`:''}</div>`}
+  return`<div class="post-session"><span class="ps-badge">Session</span><div class="ps-date">🥋 ${p.session_date||''}</div><div class="ps-stats"><span>⏱ ${p.session_duration||0}min</span><span>🤼 ${p.session_sparring||0} rnds</span>${p.session_drills?`<span>🔄 ${p.session_drills}min drills</span>`:''}</div>${p.session_notes?`<div class="ps-notes">${esc(p.session_notes)}</div>`:''}${techs?`<div class="ps-techs">${techs}</div>`:''}${subs?`<div class="ps-subs">${subs}</div>`:''}</div>`}
 
 function renderMentions(t){return esc(t).replace(/@(\w+)/g,'<span class="post-mention" onclick="findUser(\'$1\')">@$1</span>')}
 
@@ -542,7 +544,7 @@ function postMenu(id){openModal('Post Options',`
 <button class="btn btn-ghost" style="width:100%;margin-bottom:.4rem" onclick="editPost('${id}');closeModal()">✏️ Edit Post</button>
 <button class="btn btn-ghost" style="width:100%;margin-bottom:.4rem" onclick="togglePostPrivacy('${id}');closeModal()">🔒 Toggle Public/Private</button>
 <button class="btn btn-danger" style="width:100%" onclick="delPost('${id}');closeModal()">🗑 Delete Post</button>`)}
-async function delPost(id){if(!confirm('Delete this post?'))return;await api(`/api/posts/${id}`,{method:'DELETE'});document.getElementById('post-'+id)?.remove();toast('Deleted')}
+async function delPost(id){if(!confirm('Delete this post?'))return;await api(`/api/posts/${id}`,{method:'DELETE'});document.querySelectorAll(`[data-post-id="${id}"]`).forEach(e=>e.remove());toast('Deleted')}
 async function togglePostPrivacy(id){const p=await api(`/api/posts/${id}`);await api(`/api/posts/${id}`,{method:'PUT',body:{is_public:p.is_public?0:1}});toast(p.is_public?'Now private 🔒':'Now public 👁');loadFeed(true)}
 async function editPost(id){const p=await api(`/api/posts/${id}`);openModal('Edit Post',`
 <div class="field"><label>Content</label><textarea id="ep-content">${esc(p.content)}</textarea></div>
@@ -615,7 +617,7 @@ ${s.image_url?`<img src="${s.image_url}" style="width:100%;border-radius:10px;ma
 // ═══ EXPLORE ═══
 async function loadExplore(reset){if(reset){expOff=0;expMore=true;document.getElementById('explore-grid').innerHTML=''}const items=await api(`/api/explore?offset=${expOff}`);const el=document.getElementById('explore-grid');items.forEach(p=>{if(!p.image_url)return;const inner=`<img src="${p.image_url}"><div class="et-overlay">♥ ${p.like_count} 💬 ${p.comment_count}</div>`;el.insertAdjacentHTML('beforeend',`<div class="explore-tile" onclick="viewExploreItem('${p.id}')">${inner}</div>`)});expOff+=items.length;expMore=items.length>=30;document.getElementById('explore-more').style.display=expMore?'block':'none'}
 function loadMoreExplore(){if(expMore)loadExplore()}
-function viewExploreItem(id){switchView('feed');loadFeed(true);setTimeout(()=>{const e=document.getElementById('post-'+id);if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},400)}
+function viewExploreItem(id){switchView('feed');loadFeed(true);setTimeout(()=>{const e=document.getElementById('post-feed-'+id);if(e)e.scrollIntoView({behavior:'smooth',block:'center'})},400)}
 
 // ═══ FRIENDS ═══
 function debounceSearch(q){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>searchFriends(q),300)}
