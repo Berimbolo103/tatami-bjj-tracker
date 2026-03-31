@@ -1,211 +1,201 @@
-# 🥋 TATAMI — BJJ Progress Tracker
+# 🥋 TATAMI — BJJ Social Platform
 
-[![CI](https://github.com/YOUR_USERNAME/tatami-bjj-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/tatami-bjj-tracker/actions)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+> **The Strava for Grapplers.** Track your training, share sessions, connect with training partners.
 
-A full-stack BJJ training tracker — log sessions, drill techniques, track submission analytics, and get a playstyle prediction based on your physical profile. Includes an admin panel for moderating user-submitted techniques and positions.
+TATAMI is a full-stack social platform built for the Brazilian Jiu-Jitsu community. It combines personal training logs with social features inspired by Strava, letting you track your progress while connecting with your training partners.
 
-**Built as a Progressive Web App (PWA)** — works offline, installable on home screen, and ready to wrap into native iOS/Android via Capacitor.
+## 🔥 Features
 
----
+### Social Feed (Strava-style)
+- **Activity feed** showing friends' training sessions and posts
+- **Kudos (likes)** — quick thumbs-up on any post
+- **Comments** — engage with training partners
+- **Photo sharing** — upload training photos
+- **Session sharing** — attach your training log to a post
+- **Tagging** — mention training partners in posts with @username
+- **Privacy controls** — choose what's public and what stays private
 
-## Features
+### Training Log (your private diary)
+- **Session logging** — date, duration, sparring rounds, drills
+- **Technique tracking** — record which techniques you practiced
+- **Submission log** — track taps (given and received!)
+- **Public/Private toggle** — hide your diary if you got tapped by a white belt 😅
+- **Progress charts** — visualize your training over time
+- **Session stats** — total hours, rounds, and session counts
 
-### User App
-| Feature | Description |
-|---------|-------------|
-| Dashboard | Streak, mat time, weekly volume chart, position breakdown |
-| Session Log | Log training with techniques, submissions, sparring, notes |
-| Library | Browse your personal technique library by category and drill count |
-| Submit Techniques | Submit new positions for admin review; see pending/rejected status live |
-| Submission Analytics | Attempt vs finish rate, ranked by success %, bar chart |
-| Profile & Playstyle | Belt/rank, physical profile, AI-predicted playstyle, data-detected style |
-| PWA / Installable | Works offline, add-to-homescreen |
+### Social Features
+- **Friend/Buddy system** — send and accept friend requests
+- **User profiles** — belt rank, gym, training stats, bio
+- **User search** — find fellow grapplers
+- **Profile pages** — view anyone's public posts and sessions
+- **Notifications** — likes, comments, friend requests, tags
 
-### Admin Panel (/admin.html)
-| Feature | Description |
-|---------|-------------|
-| Approve | Approve pending technique submissions — they go live instantly |
-| Reject | Reject with an optional reason (user sees it in their Library) |
-| Re-approve | Reconsider a previously rejected submission |
-| Delete | Remove user-added techniques from the DB |
-| Stats | Sessions, techniques, pending count, total mat time, unique submitters |
+### Technique Library
+- **70+ pre-loaded techniques** across guards, passes, submissions, sweeps, takedowns, controls, and escapes
+- **Community submissions** — submit new techniques for admin review
+- **Searchable** — filter by name or category
 
----
+### Admin Panel
+- Dashboard with platform stats
+- Approve/reject technique submissions
+- Manage technique library
 
-## Quick Start (Local)
+## 🚀 Quick Start
 
-Prerequisites: Node.js 18+ and npm 8+
+### Prerequisites
+- Node.js 18+
+- npm
 
+### Local Development
 ```bash
-git clone https://github.com/YOUR_USERNAME/tatami-bjj-tracker.git
-cd tatami-bjj-tracker
+git clone <your-repo-url>
+cd tatami
 npm install
-cp .env.example .env
-# Edit .env — change ADMIN_TOKEN to something secret
 npm start
+# → http://localhost:3000
 ```
 
-Open:
-- App: http://localhost:3000
-- Admin: http://localhost:3000/admin.html  (token in your .env)
-- Dev mode (live reload): `npm run dev`
-
----
-
-## Testing
-
+### Environment Variables
 ```bash
-npm test                # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # With coverage report
+PORT=3000
+NODE_ENV=development
+ADMIN_TOKEN=tatami-admin-2024
+DB_DIR=./database
+ALLOWED_ORIGINS=*
 ```
 
-Tests use a temporary SQLite DB — your real data is never touched.
+## 🚂 Deploy to Railway
 
-The test suite covers: health endpoint, profile CRUD, technique listing and submission, duplicate detection, session CRUD, admin authentication, approve/reject/delete flows, and edge cases.
+This app is **Railway-ready** out of the box:
 
----
+1. Push to GitHub
+2. Connect your repo to [Railway](https://railway.app)
+3. Set environment variables:
+   - `NODE_ENV=production`
+   - `ADMIN_TOKEN=<your-secret-token>`
+   - `DB_DIR=/data/database` (if using persistent volume)
+   - `UPLOAD_DIR=/data/uploads` (if using persistent volume)
+4. Deploy!
 
-## Deploy to the Cloud
+> **Note**: For persistent data on Railway, attach a volume mounted at `/data` and set `DB_DIR=/data/database` and `UPLOAD_DIR=/data/uploads`.
 
-### Railway (recommended)
+The `nixpacks.toml` includes build dependencies needed for `better-sqlite3`.
 
-1. Push your repo to GitHub
-2. Go to railway.app → New Project → Deploy from GitHub
-3. Add a Volume mount at `/data` for persistent SQLite
-4. Set environment variables:
-   ```
-   NODE_ENV=production
-   ADMIN_TOKEN=your-strong-secret
-   DB_DIR=/data
-   ALLOWED_ORIGINS=https://your-app.up.railway.app
-   ```
-5. Railway auto-detects Node.js and runs `npm start`
-
-### Render
-
-A `render.yaml` is included — connect your repo at render.com → New → Blueprint. It auto-configures a 1GB disk at `/data` for SQLite. Set `ADMIN_TOKEN` in the dashboard.
-
-### Any VPS
-
-```bash
-npm install --omit=dev
-cp .env.example .env  # edit it
-NODE_ENV=production npm start
-```
-
-Use PM2 to keep it running: `pm2 start server.js --name tatami`
-
----
-
-## Mobile App (iOS & Android) — Roadmap
-
-The app is already a PWA — users can install it from the browser. When you're ready to publish to app stores, wrap it with Capacitor:
-
-```bash
-npm run cap:add:ios      # Requires macOS + Xcode
-npm run cap:add:android  # Requires Android Studio
-npm run cap:sync         # Sync web code to native projects
-npm run cap:ios          # Open in Xcode
-npm run cap:android      # Open in Android Studio
-```
-
-> For native builds: `fetch('/api/...')` needs a base URL pointing to your hosted server, or use `@capacitor-community/sqlite` for fully offline operation.
-
-### Publishing Checklist
-- [ ] Replace placeholder icons in `public/icons/` with real 192x192 and 512x512 PNGs
-- [ ] Update `capacitor.config.json` with your real `appId`
-- [ ] Add splash screens via Capacitor Assets
-- [ ] Configure API base URL for native builds
-- [ ] Test on real devices via TestFlight / Play Console internal testing
-- [ ] Fill out App Store / Play Store metadata, screenshots, privacy policy
-
----
-
-## Project Structure
+## 🏗 Architecture
 
 ```
-tatami-bjj-tracker/
-├── .github/workflows/ci.yml    ← GitHub Actions CI
-├── database/db.js              ← SQLite layer (better-sqlite3)
+tatami/
+├── server.js              # Express API server
+├── database/
+│   └── db.js              # SQLite database + all queries
 ├── public/
-│   ├── index.html              ← Main user app (SPA)
-│   ├── admin.html              ← Admin panel
-│   ├── manifest.json           ← PWA manifest
-│   ├── sw.js                   ← Service Worker (offline support)
-│   └── icons/                  ← PWA icons (replace with real art)
-├── tests/api.test.js           ← Full API test suite
-├── .env.example                ← Environment variable template
-├── capacitor.config.json       ← Native app config
+│   ├── index.html          # Single-page app (all frontend)
+│   ├── admin.html          # Admin panel
+│   ├── manifest.json       # PWA manifest
+│   ├── sw.js               # Service worker
+│   ├── icons/              # App icons
+│   └── uploads/            # User-uploaded images
+├── tests/
+│   └── api.test.js         # Jest + supertest API tests
 ├── package.json
-├── railway.json                ← Railway deploy config
-├── render.yaml                 ← Render deploy config
-└── server.js                   ← Express API server
+├── railway.json            # Railway config
+├── nixpacks.toml           # Build deps for Railway
+├── Procfile                # Process file
+└── .gitignore
 ```
 
----
+### Tech Stack
+- **Backend**: Node.js + Express
+- **Database**: SQLite via better-sqlite3
+- **Frontend**: Vanilla HTML/CSS/JS (single-page app)
+- **Auth**: Token-based (scrypt hashing)
+- **File uploads**: Multer
+- **Charts**: Chart.js
+- **PWA**: Service worker + manifest
 
-## Environment Variables
+## 🔒 API Endpoints
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| PORT | 3000 | Server port |
-| NODE_ENV | development | Environment |
-| ADMIN_TOKEN | tatami-admin-2024 | Change this in production! |
-| DB_DIR | ./database | Directory for tatami.db |
-| ALLOWED_ORIGINS | * | CORS origins (comma-separated) |
-
----
-
-## API Reference
-
-### Public
-
+### Auth
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /api/health | Health check |
-| GET | /api/profile | Get profile |
-| PUT | /api/profile | Save profile |
-| GET | /api/techniques | Approved techniques |
-| POST | /api/techniques/submit | Submit new technique |
-| GET | /api/techniques/my-submissions?submitted_by=Name | User's submissions |
-| GET | /api/sessions | All sessions |
-| POST | /api/sessions | Create session |
-| PUT | /api/sessions/:id | Update session |
-| DELETE | /api/sessions/:id | Delete session |
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Sign in |
+| POST | `/api/auth/logout` | Sign out |
+| GET | `/api/auth/me` | Current user info |
 
-### Admin (require x-admin-token header)
-
+### Profile
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | /api/admin/stats | Overview stats |
-| GET | /api/admin/submissions | All user submissions |
-| PUT | /api/admin/submissions/:id/approve | Approve |
-| PUT | /api/admin/submissions/:id/reject | Reject with { reason } |
-| GET | /api/admin/techniques | All techniques |
-| DELETE | /api/admin/techniques/:id | Delete technique |
-| GET | /api/admin/sessions | All sessions |
+| GET | `/api/profile/:userId` | View profile |
+| PUT | `/api/profile` | Update own profile |
+| POST | `/api/profile/avatar` | Upload avatar |
+| GET | `/api/users/search?q=` | Search users |
+
+### Friends
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/friends` | List friends |
+| GET | `/api/friends/pending` | Pending requests |
+| POST | `/api/friends/request` | Send friend request |
+| POST | `/api/friends/respond` | Accept/decline request |
+| DELETE | `/api/friends/:friendId` | Remove friend |
+
+### Sessions
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/sessions` | List sessions |
+| POST | `/api/sessions` | Log new session |
+| PUT | `/api/sessions/:id` | Update session |
+| DELETE | `/api/sessions/:id` | Delete session |
+
+### Posts
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/feed` | Social feed |
+| GET | `/api/posts/user/:userId` | User's posts |
+| POST | `/api/posts` | Create post |
+| DELETE | `/api/posts/:id` | Delete post |
+| POST | `/api/posts/upload-image` | Upload post image |
+| POST | `/api/posts/:id/like` | Toggle like |
+| GET | `/api/posts/:id/likes` | List likes |
+| GET | `/api/posts/:id/comments` | List comments |
+| POST | `/api/posts/:id/comments` | Add comment |
+
+### Notifications
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/notifications` | List notifications |
+| GET | `/api/notifications/unread-count` | Unread count |
+| POST | `/api/notifications/mark-read` | Mark all read |
+
+### Techniques
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/techniques` | List approved techniques |
+| POST | `/api/techniques/submit` | Submit new technique |
+
+## 🧪 Testing
+
+```bash
+npm test               # Run tests
+npm run test:coverage  # With coverage report
+```
+
+## 📱 PWA
+
+TATAMI works as a Progressive Web App — add it to your home screen on iOS/Android for a native-like experience.
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create your feature branch
+3. Commit changes
+4. Push and open a PR
+
+## 📄 License
+
+MIT — see [LICENSE](LICENSE)
 
 ---
 
-## Things to Test Before Going to App Stores
-
-- [ ] Does onboarding feel smooth on a real phone?
-- [ ] Is session logging fast enough to use right after class?
-- [ ] Quick-log shortcut — just duration + 1-tap techniques?
-- [ ] Multi-user support (right now single-profile per server instance)
-- [ ] Training goals — sessions per week with a progress ring
-- [ ] Sparring partner tracking
-- [ ] Injury log — track aches and rest days
-- [ ] Stripe/promotion tracker over time
-- [ ] Push notification reminders ("You haven't trained in 3 days")
-- [ ] Rate limiting on the API (express-rate-limit)
-- [ ] Input sanitisation middleware
-
----
-
-## License
-
-MIT
+**OSS! 🤙 Train hard, roll smart, share the journey.**
