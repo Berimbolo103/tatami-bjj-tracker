@@ -1,7 +1,7 @@
 {
-  "name": "tatami-bjj-social",
-  "version": "3.0.0",
-  "description": "TATAMI — BJJ Social Platform. Train. Share. Roll together.",
+  "name": "rollbook-bjj-social",
+  "version": "4.0.0",
+  "description": "Rollbook — BJJ Social Platform. Train. Share. Roll together.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

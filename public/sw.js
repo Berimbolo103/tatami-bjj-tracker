@@ -1,4 +1,4 @@
-const CACHE = 'tatami-v3';
+const CACHE = 'rollbook-v4';
 const ASSETS = ['/', '/manifest.json', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 self.addEventListener('install', e => {
