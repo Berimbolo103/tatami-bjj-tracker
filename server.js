@@ -96,7 +96,7 @@ app.get('/api/search', auth, (req,res) => { const q=req.query.q||''; if(q.length
 app.post('/api/posts/:id/like', auth, (req,res) => res.json(db.toggleLike(req.user.id,req.params.id)));
 app.get('/api/posts/:id/likes', auth, (req,res) => res.json(db.getPostLikes(req.params.id)));
 app.get('/api/posts/:id/comments', auth, (req,res) => res.json(db.getPostComments(req.params.id,req.user.id)));
-app.post('/api/posts/:id/comments', auth, (req,res) => { if(!req.body.content) return res.status(400).json({error:'Content required'}); res.json(db.addComment(req.user.id,req.params.id,req.body.content)); });
+app.post('/api/posts/:id/comments', auth, (req,res) => { if(!req.body.content) return res.status(400).json({error:'Content required'}); res.json(db.addComment(req.user.id,req.params.id,req.body.content,req.body.parent_id||null)); });
 app.delete('/api/comments/:id', auth, (req,res) => res.json(db.deleteComment(req.user.id,req.params.id)));
 app.post('/api/comments/:id/like', auth, (req,res) => res.json(db.toggleCommentLike(req.user.id,req.params.id)));
 
